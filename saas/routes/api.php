@@ -6,6 +6,7 @@ use BaoProd\Workforce\Http\Controllers\Api\AuthController;
 use BaoProd\Workforce\Http\Controllers\Api\JobController;
 use BaoProd\Workforce\Http\Controllers\Api\ApplicationController;
 use BaoProd\Workforce\Http\Controllers\Api\ModuleController;
+use BaoProd\Workforce\Http\Controllers\Api\ContratController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,7 +81,20 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'tenant'])->group(function () {
     
     // Contrats module routes
     Route::middleware(['tenant:contrats'])->prefix('contrats')->group(function () {
-        // Contract routes will be added here
+        // CRUD routes
+        Route::get('/', [ContratController::class, 'index']);
+        Route::post('/', [ContratController::class, 'store']);
+        Route::get('/{id}', [ContratController::class, 'show']);
+        Route::put('/{id}', [ContratController::class, 'update']);
+        Route::delete('/{id}', [ContratController::class, 'destroy']);
+        
+        // Action routes
+        Route::post('/{id}/signer', [ContratController::class, 'signer']);
+        Route::post('/{id}/activer', [ContratController::class, 'activer']);
+        Route::post('/{id}/terminer', [ContratController::class, 'terminer']);
+        
+        // Statistics
+        Route::get('/statistics/overview', [ContratController::class, 'statistics']);
     });
     
     // Timesheets module routes
