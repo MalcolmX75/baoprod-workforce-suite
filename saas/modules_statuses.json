@@ -1,0 +1,9 @@
+{
+    "Core": true,
+    "Contrats": true,
+    "Timesheets": true,
+    "Paie": true,
+    "Absences": true,
+    "Reporting": true,
+    "Messagerie": true
+}
