@@ -1,0 +1,49 @@
+version: 2
+updates:
+  # Laravel (SaaS) - Composer
+  - package-ecosystem: "composer"
+    directory: "/saas"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "MalcolmX75"
+    assignees:
+      - "MalcolmX75"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Flutter (Mobile) - Pub
+  - package-ecosystem: "pub"
+    directory: "/mobile/baoprod_workforce"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "MalcolmX75"
+    assignees:
+      - "MalcolmX75"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "MalcolmX75"
+    assignees:
+      - "MalcolmX75"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
