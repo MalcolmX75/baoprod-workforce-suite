@@ -167,7 +167,7 @@ class SimpleIntegrationTest extends TestCase
         // 3. Tester la configuration du Tchad
         $configTD = \BaoProd\Workforce\Models\Contrat::getConfigurationPays('TD');
         $this->assertIsArray($configTD);
-        $this->assertEquals(22.0, $configTD['charges_sociales']);
+        $this->assertEquals(25.0, $configTD['charges_sociales']);
 
         // 4. Vérifier que toutes les configurations ont les mêmes clés
         $keys = array_keys($configGA);

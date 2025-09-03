@@ -57,6 +57,30 @@ class Tenant extends Model
     }
 
     /**
+     * Get all contrats for this tenant
+     */
+    public function contrats(): HasMany
+    {
+        return $this->hasMany(Contrat::class);
+    }
+
+    /**
+     * Get all timesheets for this tenant
+     */
+    public function timesheets(): HasMany
+    {
+        return $this->hasMany(Timesheet::class);
+    }
+
+    /**
+     * Get all paie records for this tenant
+     */
+    public function paie(): HasMany
+    {
+        return $this->hasMany(Paie::class);
+    }
+
+    /**
      * Check if a module is active for this tenant
      */
     public function hasModule(string $module): bool
