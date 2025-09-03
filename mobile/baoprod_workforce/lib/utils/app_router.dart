@@ -3,12 +3,11 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../screens/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
-import '../screens/auth/register_screen.dart';
-import '../screens/home/dashboard_screen.dart';
-import '../screens/timesheet/timesheet_list_screen.dart';
-import '../screens/timesheet/clock_in_out_screen.dart';
-import '../screens/profile/profile_screen.dart';
-import '../screens/settings/settings_screen.dart';
+import '../screens/dashboard_screen.dart';
+import '../screens/timesheet_list_screen.dart';
+import '../screens/clock_in_out_screen.dart';
+import '../screens/profile_screen.dart';
+import '../screens/settings_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
