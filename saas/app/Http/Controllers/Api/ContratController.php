@@ -6,6 +6,7 @@ use BaoProd\Workforce\Http\Controllers\Controller;
 use BaoProd\Workforce\Models\Contrat;
 use BaoProd\Workforce\Models\User;
 use BaoProd\Workforce\Models\Job;
+use BaoProd\Workforce\Services\ContratTemplateService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -456,5 +457,181 @@ class ContratController extends Controller
         
         $contrat->periode_essai_jours = $dureeJours;
         $contrat->periode_essai_fin = $contrat->date_debut->addDays($dureeJours);
+    }
+
+    /**
+     * Générer le contrat en HTML
+     */
+    public function generateHtml(Request $request, string $id): JsonResponse
+    {
+        $tenantId = $request->get('tenant_id');
+        
+        $contrat = Contrat::byTenant($tenantId)->findOrFail($id);
+
+        try {
+            $templateService = new ContratTemplateService();
+            $html = $templateService->generateContratHtml($contrat);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'html' => $html,
+                    'contrat' => $contrat
+                ],
+                'message' => 'Contrat généré en HTML avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du contrat',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Générer le contrat en PDF
+     */
+    public function generatePdf(Request $request, string $id): JsonResponse
+    {
+        $tenantId = $request->get('tenant_id');
+        
+        $contrat = Contrat::byTenant($tenantId)->findOrFail($id);
+
+        try {
+            $templateService = new ContratTemplateService();
+            $pdf = $templateService->generateContratPdf($contrat);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'pdf' => base64_encode($pdf), // Encoder en base64 pour l'API
+                    'contrat' => $contrat
+                ],
+                'message' => 'Contrat généré en PDF avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Créer un contrat à partir d'une candidature
+     */
+    public function createFromApplication(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'application_id' => 'required|exists:applications,id',
+            'type_contrat' => 'required|in:CDD,CDI,MISSION,STAGE',
+            'date_debut' => 'required|date|after_or_equal:today',
+            'date_fin' => 'nullable|date|after:date_debut',
+            'salaire_brut' => 'required|numeric|min:0',
+            'pays_code' => 'required|in:GA,CM,TD,CF,GQ,CG',
+            'description' => 'nullable|string|max:1000',
+            'conditions_particulieres' => 'nullable|string|max:2000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreurs de validation',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $tenantId = $request->get('tenant_id');
+            $application = \BaoProd\Workforce\Models\Application::byTenant($tenantId)->findOrFail($request->application_id);
+
+            $contrat = new Contrat();
+            $contrat->fill($request->all());
+            $contrat->tenant_id = $tenantId;
+            $contrat->user_id = $application->candidate_id;
+            $contrat->job_id = $application->job_id;
+            $contrat->created_by = Auth::id();
+            
+            // Appliquer la configuration du pays
+            $contrat->appliquerConfigurationPays();
+            
+            // Calculer les valeurs dérivées
+            $contrat->salaire_net = $contrat->calculerSalaireNet();
+            $contrat->taux_horaire = $contrat->calculerTauxHoraire();
+            $contrat->charges_sociales_montant = $contrat->salaire_brut * ($contrat->charges_sociales_pourcentage / 100);
+            
+            // Générer le numéro de contrat
+            $contrat->numero_contrat = $this->genererNumeroContratUnique($contrat->pays_code, $contrat->type_contrat);
+            
+            // Calculer la période d'essai
+            $this->calculerPeriodeEssai($contrat);
+            
+            $contrat->save();
+
+            // Mettre à jour le statut de la candidature
+            $application->update(['status' => 'hired']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $contrat->load(['user', 'job', 'createdBy']),
+                'message' => 'Contrat créé à partir de la candidature avec succès'
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du contrat',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtenir les templates disponibles par pays
+     */
+    public function getTemplates(Request $request): JsonResponse
+    {
+        $templates = [
+            'GA' => [
+                'name' => 'Gabon',
+                'description' => 'Template conforme au Code du Travail gabonais',
+                'features' => ['SMIG 80,000 FCFA', 'Charges 28%', '40h/semaine']
+            ],
+            'CM' => [
+                'name' => 'Cameroun',
+                'description' => 'Template conforme au Code du Travail camerounais',
+                'features' => ['SMIG 36,270 FCFA', 'Charges 20%', '40h/semaine']
+            ],
+            'TD' => [
+                'name' => 'Tchad',
+                'description' => 'Template conforme au Code du Travail tchadien',
+                'features' => ['SMIG 60,000 FCFA', 'Charges 25%', '39h/semaine']
+            ],
+            'CF' => [
+                'name' => 'RCA',
+                'description' => 'Template conforme au Code du Travail centrafricain',
+                'features' => ['SMIG 35,000 FCFA', 'Charges 25%', '40h/semaine']
+            ],
+            'GQ' => [
+                'name' => 'Guinée Équatoriale',
+                'description' => 'Template conforme au Code du Travail équato-guinéen',
+                'features' => ['SMIG 150,000 FCFA', 'Charges 26.5%', '40h/semaine']
+            ],
+            'CG' => [
+                'name' => 'Congo',
+                'description' => 'Template conforme au Code du Travail congolais',
+                'features' => ['SMIG 90,000 FCFA', 'Charges 25%', '40h/semaine']
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $templates,
+            'message' => 'Templates récupérés avec succès'
+        ]);
     }
 }

@@ -1,0 +1,161 @@
+# BaoProd Workforce Suite - .gitignore
+
+# ===========================================
+# LARAVEL (SaaS)
+# ===========================================
+saas/vendor/
+saas/node_modules/
+saas/.env
+saas/.env.local
+saas/.env.production
+saas/.env.staging
+saas/storage/logs/*
+saas/storage/framework/cache/*
+saas/storage/framework/sessions/*
+saas/storage/framework/views/*
+saas/bootstrap/cache/*
+saas/public/hot
+saas/public/storage
+saas/public/build
+saas/public/mix-manifest.json
+saas/npm-debug.log
+saas/yarn-error.log
+saas/.phpunit.result.cache
+saas/.DS_Store
+saas/Thumbs.db
+
+# ===========================================
+# FLUTTER (Mobile)
+# ===========================================
+mobile/baoprod_workforce/.dart_tool/
+mobile/baoprod_workforce/.packages
+mobile/baoprod_workforce/.pub-cache/
+mobile/baoprod_workforce/.pub/
+mobile/baoprod_workforce/build/
+mobile/baoprod_workforce/.flutter-plugins
+mobile/baoprod_workforce/.flutter-plugins-dependencies
+mobile/baoprod_workforce/.metadata
+mobile/baoprod_workforce/.idea/
+mobile/baoprod_workforce/*.iml
+mobile/baoprod_workforce/.vscode/
+mobile/baoprod_workforce/android/.gradle/
+mobile/baoprod_workforce/android/captures/
+mobile/baoprod_workforce/android/gradlew
+mobile/baoprod_workforce/android/gradlew.bat
+mobile/baoprod_workforce/android/local.properties
+mobile/baoprod_workforce/android/**/GeneratedPluginRegistrant.java
+mobile/baoprod_workforce/ios/**/*.mode1v3
+mobile/baoprod_workforce/ios/**/*.mode2v3
+mobile/baoprod_workforce/ios/**/*.moved-aside
+mobile/baoprod_workforce/ios/**/*.pbxuser
+mobile/baoprod_workforce/ios/**/*.perspectivev3
+mobile/baoprod_workforce/ios/**/*sync/
+mobile/baoprod_workforce/ios/**/.sconsign.dblite
+mobile/baoprod_workforce/ios/**/.tags*
+mobile/baoprod_workforce/ios/**/.vagrant/
+mobile/baoprod_workforce/ios/**/DerivedData/
+mobile/baoprod_workforce/ios/**/Icon?
+mobile/baoprod_workforce/ios/**/Pods/
+mobile/baoprod_workforce/ios/**/.symlinks/
+mobile/baoprod_workforce/ios/**/profile
+mobile/baoprod_workforce/ios/**/xcuserdata
+mobile/baoprod_workforce/ios/.generated/
+mobile/baoprod_workforce/ios/Flutter/App.framework
+mobile/baoprod_workforce/ios/Flutter/Flutter.framework
+mobile/baoprod_workforce/ios/Flutter/Flutter.podspec
+mobile/baoprod_workforce/ios/Flutter/Generated.xcconfig
+mobile/baoprod_workforce/ios/Flutter/ephemeral/
+mobile/baoprod_workforce/ios/Flutter/app.flx
+mobile/baoprod_workforce/ios/Flutter/app.zip
+mobile/baoprod_workforce/ios/Flutter/flutter_assets/
+mobile/baoprod_workforce/ios/ServiceDefinitions.json
+mobile/baoprod_workforce/ios/Runner/GeneratedPluginRegistrant.*
+
+# ===========================================
+# WORDPRESS (Plugin)
+# ===========================================
+plugin/node_modules/
+plugin/.env
+plugin/.DS_Store
+plugin/Thumbs.db
+plugin/wp-config.php
+plugin/wp-content/uploads/
+plugin/wp-content/cache/
+plugin/wp-content/backup-db/
+plugin/wp-content/advanced-cache.php
+plugin/wp-content/wp-cache-config.php
+plugin/wp-content/cache/
+plugin/wp-content/cache/supercache/
+
+# ===========================================
+# GÉNÉRAL
+# ===========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ===========================================
+# IDE & ÉDITEURS
+# ===========================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.atom/
+.brackets.json
+
+# ===========================================
+# SÉCURITÉ
+# ===========================================
+*.pem
+*.key
+*.crt
+*.p12
+.env.*
+config/database.php
+config/local.php
+
+# ===========================================
+# BACKUPS & ARCHIVES
+# ===========================================
+*.tar.gz
+*.zip
+*.rar
+*.7z
+backup/
+backups/
+*.backup
+*.bak
+
+# ===========================================
+# TESTS & COVERAGE
+# ===========================================
+coverage/
+.nyc_output/
+.phpunit.result.cache
+test-results/
+
+# ===========================================
+# DÉPLOIEMENT
+# ===========================================
+deploy/
+deployment/
+*.deployment
+deploy.sh.bak
+
+# ===========================================
+# DOCUMENTATION GÉNÉRÉE
+# ===========================================
+docs/_build/
+docs/.doctrees/
+docs/build/

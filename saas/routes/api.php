@@ -7,6 +7,8 @@ use BaoProd\Workforce\Http\Controllers\Api\JobController;
 use BaoProd\Workforce\Http\Controllers\Api\ApplicationController;
 use BaoProd\Workforce\Http\Controllers\Api\ModuleController;
 use BaoProd\Workforce\Http\Controllers\Api\ContratController;
+use BaoProd\Workforce\Http\Controllers\Api\TimesheetController;
+use BaoProd\Workforce\Http\Controllers\Api\PaieController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,18 +95,63 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::post('/{id}/activer', [ContratController::class, 'activer']);
         Route::post('/{id}/terminer', [ContratController::class, 'terminer']);
         
+        // Generation routes
+        Route::get('/{id}/html', [ContratController::class, 'generateHtml']);
+        Route::get('/{id}/pdf', [ContratController::class, 'generatePdf']);
+        
+        // Special routes
+        Route::post('/from-application', [ContratController::class, 'createFromApplication']);
+        Route::get('/templates/available', [ContratController::class, 'getTemplates']);
+        
         // Statistics
         Route::get('/statistics/overview', [ContratController::class, 'statistics']);
     });
     
     // Timesheets module routes
     Route::middleware(['tenant:timesheets'])->prefix('timesheets')->group(function () {
-        // Timesheet routes will be added here
+        // CRUD routes
+        Route::get('/', [TimesheetController::class, 'index']);
+        Route::post('/', [TimesheetController::class, 'store']);
+        Route::get('/{id}', [TimesheetController::class, 'show']);
+        Route::put('/{id}', [TimesheetController::class, 'update']);
+        Route::delete('/{id}', [TimesheetController::class, 'destroy']);
+        
+        // Action routes
+        Route::post('/{id}/validate', [TimesheetController::class, 'validate']);
+        Route::post('/{id}/reject', [TimesheetController::class, 'reject']);
+        
+        // Pointage routes
+        Route::post('/clock-in', [TimesheetController::class, 'clockIn']);
+        Route::post('/{id}/clock-out', [TimesheetController::class, 'clockOut']);
+        
+        // Export routes
+        Route::post('/export/payroll', [TimesheetController::class, 'exportForPayroll']);
+        
+        // Statistics
+        Route::get('/statistics/overview', [TimesheetController::class, 'statistics']);
     });
     
     // Paie module routes
     Route::middleware(['tenant:paie'])->prefix('paie')->group(function () {
-        // Payroll routes will be added here
+        // CRUD routes
+        Route::get('/', [PaieController::class, 'index']);
+        Route::post('/', [PaieController::class, 'store']);
+        Route::get('/{id}', [PaieController::class, 'show']);
+        Route::put('/{id}', [PaieController::class, 'update']);
+        Route::delete('/{id}', [PaieController::class, 'destroy']);
+        
+        // Action routes
+        Route::post('/{id}/generate', [PaieController::class, 'generateFromTimesheets']);
+        Route::post('/{id}/mark-paid', [PaieController::class, 'markAsPaid']);
+        
+        // Generation routes
+        Route::get('/{id}/pdf', [PaieController::class, 'generatePdf']);
+        
+        // Export routes
+        Route::post('/export/accounting', [PaieController::class, 'exportForAccounting']);
+        
+        // Statistics
+        Route::get('/statistics/overview', [PaieController::class, 'statistics']);
     });
     
     // Absences module routes

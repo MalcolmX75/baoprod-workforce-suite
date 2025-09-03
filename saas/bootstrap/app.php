@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+            'tenant' => \BaoProd\Workforce\Http\Middleware\TenantMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

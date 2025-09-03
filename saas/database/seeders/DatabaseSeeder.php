@@ -3,10 +3,10 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Tenant;
-use App\Models\User;
-use App\Models\Job;
-use App\Models\Application;
+use BaoProd\Workforce\Models\Tenant;
+use BaoProd\Workforce\Models\User;
+use BaoProd\Workforce\Models\Job;
+use BaoProd\Workforce\Models\Application;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
     {
         // Create a test tenant
         $tenant = Tenant::create([
-            'name' => 'JLC Gabon',
-            'domain' => 'jlc-gabon.local',
-            'subdomain' => 'jlc-gabon',
+            'name' => 'BaoProd Gabon',
+            'domain' => 'baoprod-gabon.local',
+            'subdomain' => 'baoprod-gabon',
             'country_code' => 'GA',
             'currency' => 'XOF',
             'language' => 'fr',
@@ -38,8 +38,8 @@ class DatabaseSeeder extends Seeder
         $admin = User::create([
             'tenant_id' => $tenant->id,
             'first_name' => 'Admin',
-            'last_name' => 'JLC',
-            'email' => 'admin@jlc-gabon.com',
+            'last_name' => 'BaoProd',
+            'email' => 'admin@baoprod-gabon.com',
             'password' => Hash::make('password'),
             'phone' => '+241 01 23 45 67',
             'type' => 'admin',
@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
             'tenant_id' => $tenant->id,
             'first_name' => 'Jean',
             'last_name' => 'Dupont',
-            'email' => 'employer@jlc-gabon.com',
+            'email' => 'employer@baoprod-gabon.com',
             'password' => Hash::make('password'),
             'phone' => '+241 01 23 45 68',
             'type' => 'employer',
@@ -258,10 +258,19 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Seed des contrats de test
+        $this->call(ContratSeeder::class);
+        
+        // Seed des timesheets de test
+        $this->call(TimesheetSeeder::class);
+        
+        // Seed des bulletins de paie de test
+        $this->call(PaieSeeder::class);
+
         $this->command->info('Database seeded successfully!');
-        $this->command->info('Test tenant: JLC Gabon');
-        $this->command->info('Admin email: admin@jlc-gabon.com');
-        $this->command->info('Employer email: employer@jlc-gabon.com');
+        $this->command->info('Test tenant: BaoProd Gabon');
+        $this->command->info('Admin email: admin@baoprod-gabon.com');
+        $this->command->info('Employer email: employer@baoprod-gabon.com');
         $this->command->info('Password for all users: password');
     }
 }
