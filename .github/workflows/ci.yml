@@ -111,7 +111,7 @@ jobs:
       working-directory: ./mobile/baoprod_workforce
     
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: baoprod-workforce-apk
         path: mobile/baoprod_workforce/build/app/outputs/flutter-apk/app-release.apk
