@@ -68,11 +68,17 @@
 - 🔄 **Suivi candidatures** (statuts, historique)
 - 🔄 **Upload CV** (gestion des documents)
 - 🔄 **Messagerie** (communication avec employeurs)
+- 🔄 **Demande de congés** (formulaire complet)
+- 🔄 **Justification d'absences** (upload justificatifs)
+- 🔄 **Consultation des soldes** (congés restants)
 
 ### **🏢 Employeur/Client** (accès mobile limité)
 - 🔄 **Consultation offres** (lecture seule)
 - 🔄 **Notifications** (nouvelles candidatures)
 - 🔄 **Consultation timesheets** (validation rapide)
+- 🔄 **Validation des congés** (approbation/rejet)
+- 🔄 **Planification des repos** (jours de repos intérimaire)
+- 🔄 **Consultation des justificatifs** (absences)
 
 ### **⚙️ Administrateur JLC** (accès complet)
 - ✅ **Toutes les fonctionnalités candidat**
@@ -80,6 +86,8 @@
 - 🔄 **Supervision pointages** (vue d'ensemble)
 - 🔄 **Gestion urgente** (validation rapide)
 - 🔄 **Notifications critiques** (alertes système)
+- 🔄 **Supervision des absences** (vue globale)
+- 🔄 **Validation des justificatifs** (audit)
 
 ---
 
@@ -146,12 +154,15 @@ class NavigationService {
 - **Facturation clients** entreprises
 - **Intégration comptabilité**
 
-### **Module 4 : Absences & Congés** 🔄
-- **Demande en ligne** de congés
+### **Module 4 : Absences & Congés** ✅
+- **Demande en ligne** de congés (mobile + web)
+- **Justification d'absences** avec upload de documents
+- **Horodatage automatique** envoyé à employeur et client
+- **Planification des jours de repos** par le client
 - **Workflow d'approbation** configurable
 - **Gestion des soldes** automatique
 - **Calendrier intégré** avec conflits
-- **Justificatifs** (upload documents)
+- **Notifications** push, email et SMS
 
 ### **Module 5 : Reporting & BI** 🔄
 - **Tableaux de bord** avancés
@@ -293,6 +304,7 @@ class SyncService {
 | **Timesheets** | ✅ Consultation | 🔄 Validation | ✅ Gestion | ✅ Gestion |
 | **Contrats** | 🔄 Consultation | ✅ Gestion | ✅ Gestion | ✅ Complète |
 | **Signature** | 🔄 Basique | ✅ Complète | ✅ Complète | ✅ Complète |
+| **Absences & Congés** | ✅ Complète | ✅ Gestion | ✅ Supervision | ✅ Complète |
 | **Facturation** | ❌ | ✅ Consultation | ✅ Gestion | ✅ Gestion |
 | **Reporting** | 🔄 Personnel | ✅ Entreprise | ✅ Global | ✅ Complet |
 | **Configuration** | 🔄 Profil | ✅ Entreprise | ✅ Système | ✅ Complet |
