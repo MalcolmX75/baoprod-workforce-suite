@@ -227,7 +227,7 @@ class SimpleIntegrationTest extends TestCase
         $this->assertContains($this->paie->statut, ['BROUILLON', 'GENERE', 'PAYE', 'ANNULE']);
         
         // 4. Statuts de l'application
-        $this->assertContains($this->application->statut, ['EN_ATTENTE', 'ACCEPTE', 'REJETE']);
+        $this->assertContains($this->application->status, ['pending', 'accepted', 'rejected']);
         
         // 5. Statuts du job
         $this->assertContains($this->job->status, ['draft', 'published', 'closed', 'filled']);
