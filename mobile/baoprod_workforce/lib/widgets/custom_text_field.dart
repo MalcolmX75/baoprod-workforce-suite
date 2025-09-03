@@ -1,310 +1,381 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import '../utils/constants.dart';
-import '../utils/app_theme.dart';
 
-class CustomTextField extends StatelessWidget {
-  final String name;
-  final String label;
+class CustomTextField extends StatefulWidget {
+  final TextEditingController? controller;
+  final String? label;
   final String? hint;
-  final String? initialValue;
+  final String? helperText;
+  final String? errorText;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
   final bool enabled;
   final bool readOnly;
   final int? maxLines;
+  final int? minLines;
   final int? maxLength;
-  final IconData? prefixIcon;
-  final Widget? suffixIcon;
-  final VoidCallback? onTap;
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onSubmitted;
-  final List<String? Function(String?)>? validators;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
+  final void Function()? onTap;
+  final FocusNode? focusNode;
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
-  final String? helperText;
-  final String? errorText;
+  final bool autofocus;
   final EdgeInsetsGeometry? contentPadding;
-  
+  final Color? fillColor;
+  final BorderRadius? borderRadius;
+  final double? height;
+
   const CustomTextField({
     super.key,
-    required this.name,
-    required this.label,
+    this.controller,
+    this.label,
     this.hint,
-    this.initialValue,
+    this.helperText,
+    this.errorText,
+    this.prefixIcon,
+    this.suffixIcon,
     this.keyboardType,
     this.textInputAction,
     this.obscureText = false,
     this.enabled = true,
     this.readOnly = false,
     this.maxLines = 1,
+    this.minLines,
     this.maxLength,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.onTap,
+    this.validator,
     this.onChanged,
     this.onSubmitted,
-    this.validators,
+    this.onTap,
+    this.focusNode,
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.none,
-    this.helperText,
-    this.errorText,
+    this.autofocus = false,
     this.contentPadding,
+    this.fillColor,
+    this.borderRadius,
+    this.height,
   });
 
   @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late FocusNode _focusNode;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return FormBuilderTextField(
-      name: name,
-      initialValue: initialValue,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      obscureText: obscureText,
-      enabled: enabled,
-      readOnly: readOnly,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      onTap: onTap,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      validators: validators,
-      inputFormatters: inputFormatters,
-      textCapitalization: textCapitalization,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        helperText: helperText,
-        errorText: errorText,
-        prefixIcon: prefixIcon != null
-            ? Icon(
-                prefixIcon,
-                color: AppTheme.textSecondaryColor,
-              )
-            : null,
-        suffixIcon: suffixIcon,
-        contentPadding: contentPadding ??
-            const EdgeInsets.symmetric(
-              horizontal: AppConstants.defaultPadding,
-              vertical: 12,
+    final theme = Theme.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.label != null) ...[
+          Text(
+            widget.label!,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: _isFocused ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
+              fontWeight: FontWeight.w600,
             ),
-        filled: true,
-        fillColor: enabled ? Colors.grey[50] : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.dividerColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.dividerColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(
-            color: AppTheme.primaryColor,
-            width: 2,
+          ),
+          const SizedBox(height: 8),
+        ],
+        
+        Container(
+          height: widget.height,
+          child: TextFormField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            obscureText: widget.obscureText,
+            enabled: widget.enabled,
+            readOnly: widget.readOnly,
+            maxLines: widget.maxLines,
+            minLines: widget.minLines,
+            maxLength: widget.maxLength,
+            validator: widget.validator,
+            onChanged: widget.onChanged,
+            onFieldSubmitted: widget.onSubmitted,
+            onTap: widget.onTap,
+            inputFormatters: widget.inputFormatters,
+            textCapitalization: widget.textCapitalization,
+            autofocus: widget.autofocus,
+            style: theme.textTheme.bodyLarge,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              helperText: widget.helperText,
+              errorText: widget.errorText,
+              prefixIcon: widget.prefixIcon != null
+                  ? Icon(
+                      widget.prefixIcon,
+                      color: _isFocused ? AppTheme.primaryColor : AppTheme.textSecondaryColor,
+                    )
+                  : null,
+              suffixIcon: widget.suffixIcon,
+              filled: true,
+              fillColor: widget.fillColor ?? 
+                         (widget.enabled ? Colors.grey[50] : Colors.grey[100]),
+              contentPadding: widget.contentPadding ?? 
+                             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(color: AppTheme.dividerColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(color: AppTheme.dividerColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(color: AppTheme.errorColor),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(color: AppTheme.errorColor, width: 2),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                borderSide: const BorderSide(color: AppTheme.dividerColor),
+              ),
+              hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                color: AppTheme.textHintColor,
+              ),
+              helperStyle: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              errorStyle: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.errorColor,
+              ),
+            ),
           ),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.errorColor),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(
-            color: AppTheme.errorColor,
-            width: 2,
-          ),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        labelStyle: TextStyle(
-          color: enabled ? AppTheme.textSecondaryColor : Colors.grey[500],
-        ),
-        hintStyle: TextStyle(
-          color: AppTheme.textHintColor,
-        ),
-        helperStyle: TextStyle(
-          color: AppTheme.textSecondaryColor,
-          fontSize: 12,
-        ),
-        errorStyle: const TextStyle(
-          color: AppTheme.errorColor,
-          fontSize: 12,
-        ),
-      ),
+      ],
     );
   }
 }
 
-class CustomSearchField extends StatelessWidget {
-  final String hint;
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onSubmitted;
-  final VoidCallback? onClear;
+/// Champ de recherche personnalisé
+class SearchTextField extends StatefulWidget {
+  final String? hint;
   final String? initialValue;
-  final bool enabled;
-  
-  const CustomSearchField({
+  final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
+  final VoidCallback? onClear;
+  final bool showClearButton;
+  final bool autofocus;
+
+  const SearchTextField({
     super.key,
-    required this.hint,
+    this.hint,
+    this.initialValue,
     this.onChanged,
     this.onSubmitted,
     this.onClear,
-    this.initialValue,
-    this.enabled = true,
+    this.showClearButton = true,
+    this.autofocus = false,
   });
 
   @override
+  State<SearchTextField> createState() => _SearchTextFieldState();
+}
+
+class _SearchTextFieldState extends State<SearchTextField> {
+  late TextEditingController _controller;
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+    _hasText = widget.initialValue?.isNotEmpty ?? false;
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {
+      _hasText = _controller.text.isNotEmpty;
+    });
+    widget.onChanged?.call(_controller.text);
+  }
+
+  void _clearText() {
+    _controller.clear();
+    widget.onClear?.call();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return TextField(
-      enabled: enabled,
-      initialValue: initialValue,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: const Icon(
-          Icons.search,
-          color: AppTheme.textSecondaryColor,
-        ),
-        suffixIcon: initialValue != null && initialValue!.isNotEmpty
-            ? IconButton(
-                icon: const Icon(
-                  Icons.clear,
-                  color: AppTheme.textSecondaryColor,
-                ),
-                onPressed: onClear,
-              )
-            : null,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppConstants.defaultPadding,
-          vertical: 12,
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.dividerColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.dividerColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(
-            color: AppTheme.primaryColor,
-            width: 2,
-          ),
-        ),
-        hintStyle: const TextStyle(
-          color: AppTheme.textHintColor,
-        ),
-      ),
+    return CustomTextField(
+      controller: _controller,
+      hint: widget.hint ?? 'Rechercher...',
+      prefixIcon: Icons.search,
+      suffixIcon: widget.showClearButton && _hasText
+          ? IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: _clearText,
+            )
+          : null,
+      textInputAction: TextInputAction.search,
+      onSubmitted: widget.onSubmitted,
+      autofocus: widget.autofocus,
     );
   }
 }
 
-class CustomDropdownField<T> extends StatelessWidget {
-  final String name;
-  final String label;
+/// Champ de mot de passe personnalisé
+class PasswordTextField extends StatefulWidget {
+  final TextEditingController? controller;
+  final String? label;
   final String? hint;
-  final T? initialValue;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?>? onChanged;
-  final List<String? Function(T?)>? validators;
-  final bool enabled;
-  final String? helperText;
-  final IconData? prefixIcon;
-  
-  const CustomDropdownField({
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final FocusNode? focusNode;
+
+  const PasswordTextField({
     super.key,
-    required this.name,
-    required this.label,
+    this.controller,
+    this.label,
     this.hint,
-    this.initialValue,
-    required this.items,
+    this.validator,
     this.onChanged,
-    this.validators,
-    this.enabled = true,
-    this.helperText,
-    this.prefixIcon,
+    this.focusNode,
+  });
+
+  @override
+  State<PasswordTextField> createState() => _PasswordTextFieldState();
+}
+
+class _PasswordTextFieldState extends State<PasswordTextField> {
+  bool _obscureText = true;
+
+  void _toggleObscureText() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomTextField(
+      controller: widget.controller,
+      label: widget.label ?? 'Mot de passe',
+      hint: widget.hint ?? 'Entrez votre mot de passe',
+      obscureText: _obscureText,
+      prefixIcon: Icons.lock_outline,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscureText ? Icons.visibility : Icons.visibility_off,
+        ),
+        onPressed: _toggleObscureText,
+      ),
+      validator: widget.validator,
+      onChanged: widget.onChanged,
+      focusNode: widget.focusNode,
+    );
+  }
+}
+
+/// Champ de numéro de téléphone
+class PhoneTextField extends StatelessWidget {
+  final TextEditingController? controller;
+  final String? label;
+  final String? hint;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+
+  const PhoneTextField({
+    super.key,
+    this.controller,
+    this.label,
+    this.hint,
+    this.validator,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return FormBuilderDropdown<T>(
-      name: name,
-      initialValue: initialValue,
-      items: items,
+    return CustomTextField(
+      controller: controller,
+      label: label ?? 'Numéro de téléphone',
+      hint: hint ?? 'Entrez votre numéro de téléphone',
+      keyboardType: TextInputType.phone,
+      prefixIcon: Icons.phone_outlined,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(15),
+      ],
+      validator: validator,
       onChanged: onChanged,
-      validators: validators,
-      enabled: enabled,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        helperText: helperText,
-        prefixIcon: prefixIcon != null
-            ? Icon(
-                prefixIcon,
-                color: AppTheme.textSecondaryColor,
-              )
-            : null,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppConstants.defaultPadding,
-          vertical: 12,
-        ),
-        filled: true,
-        fillColor: enabled ? Colors.grey[50] : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.dividerColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.dividerColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(
-            color: AppTheme.primaryColor,
-            width: 2,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppTheme.errorColor),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(
-            color: AppTheme.errorColor,
-            width: 2,
-          ),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        labelStyle: TextStyle(
-          color: enabled ? AppTheme.textSecondaryColor : Colors.grey[500],
-        ),
-        hintStyle: const TextStyle(
-          color: AppTheme.textHintColor,
-        ),
-        helperStyle: TextStyle(
-          color: AppTheme.textSecondaryColor,
-          fontSize: 12,
-        ),
-        errorStyle: const TextStyle(
-          color: AppTheme.errorColor,
-          fontSize: 12,
-        ),
-      ),
+    );
+  }
+}
+
+/// Champ d'email
+class EmailTextField extends StatelessWidget {
+  final TextEditingController? controller;
+  final String? label;
+  final String? hint;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+
+  const EmailTextField({
+    super.key,
+    this.controller,
+    this.label,
+    this.hint,
+    this.validator,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomTextField(
+      controller: controller,
+      label: label ?? 'Email',
+      hint: hint ?? 'Entrez votre adresse email',
+      keyboardType: TextInputType.emailAddress,
+      prefixIcon: Icons.email_outlined,
+      validator: validator,
+      onChanged: onChanged,
     );
   }
 }

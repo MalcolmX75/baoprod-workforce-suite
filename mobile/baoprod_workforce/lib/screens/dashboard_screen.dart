@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-
 import '../providers/auth_provider.dart';
 import '../providers/timesheet_provider.dart';
-import '../widgets/custom_button.dart';
 import '../utils/constants.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -15,177 +13,211 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _loadDashboardData();
-  }
+  int _selectedIndex = 0;
 
-  Future<void> _loadDashboardData() async {
-    final timesheetProvider = Provider.of<TimesheetProvider>(context, listen: false);
-    await timesheetProvider.loadTimesheets();
+  final List<Widget> _screens = [
+    const _HomeTab(),
+    const _TimesheetsTab(),
+    const _ProfileTab(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: AppTheme.primaryColor,
+        unselectedItemColor: AppTheme.textSecondaryColor,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.access_time_outlined),
+            activeIcon: Icon(Icons.access_time),
+            label: 'Pointage',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
+      ),
+    );
   }
+}
+
+class _HomeTab extends StatelessWidget {
+  const _HomeTab();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tableau de Bord'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text('Tableau de bord'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              // TODO: Navigate to notifications
+              context.go('/notifications');
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              context.push('/settings');
+              context.go('/settings');
             },
           ),
         ],
       ),
-      body: Consumer2<AuthProvider, TimesheetProvider>(
-        builder: (context, authProvider, timesheetProvider, child) {
-          final user = authProvider.user;
-          final currentTimesheet = timesheetProvider.currentTimesheet;
-          
-          return RefreshIndicator(
-            onRefresh: _loadDashboardData,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Welcome Card
-                  _buildWelcomeCard(user?.firstName ?? 'Utilisateur'),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Quick Actions
-                  _buildQuickActionsSection(currentTimesheet),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Statistics
-                  _buildStatisticsSection(timesheetProvider),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Recent Timesheets
-                  _buildRecentTimesheetsSection(timesheetProvider),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildWelcomeCard(String firstName) {
-    return Card(
-      elevation: 4,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [AppTheme.primaryColor, AppTheme.primaryColor.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Bonjour, $firstName !',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Bienvenue sur votre tableau de bord BaoProd Workforce',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
+            // Salutation
+            _buildGreeting(context),
+            
+            const SizedBox(height: 24),
+            
+            // Actions rapides
+            _buildQuickActions(context),
+            
+            const SizedBox(height: 24),
+            
+            // Statistiques
+            _buildStatistics(context),
+            
+            const SizedBox(height: 24),
+            
+            // Dernières activités
+            _buildRecentActivities(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActionsSection(dynamic currentTimesheet) {
-    final isClockedIn = currentTimesheet != null && currentTimesheet.status == 'EN_COURS';
-    
+  Widget _buildGreeting(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.user;
+        final hour = DateTime.now().hour;
+        String greeting;
+        
+        if (hour < 12) {
+          greeting = 'Bonjour';
+        } else if (hour < 18) {
+          greeting = 'Bon après-midi';
+        } else {
+          greeting = 'Bonsoir';
+        }
+        
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$greeting,',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?.displayName ?? 'Utilisateur',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Prêt pour une nouvelle journée de travail ?',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Actions Rapides',
-          style: TextStyle(
-            fontSize: 20,
+        Text(
+          'Actions rapides',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: CustomButton(
-                text: isClockedIn ? 'Pointer Sortie' : 'Pointer Entrée',
-                onPressed: () {
-                  context.push('/clock-in-out');
-                },
-                backgroundColor: isClockedIn ? Colors.red : Colors.green,
-                icon: isClockedIn ? Icons.logout : Icons.login,
+              child: _buildActionCard(
+                context,
+                icon: Icons.login,
+                title: 'Pointer',
+                subtitle: 'Entrée/Sortie',
+                color: AppTheme.successColor,
+                onTap: () => context.go('/clock-in-out'),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
-              child: CustomButton(
-                text: 'Mes Timesheets',
-                onPressed: () {
-                  context.push('/timesheets');
-                },
-                backgroundColor: AppTheme.secondaryColor,
-                icon: Icons.access_time,
+              child: _buildActionCard(
+                context,
+                icon: Icons.list_alt,
+                title: 'Timesheets',
+                subtitle: 'Feuilles de temps',
+                color: AppTheme.primaryColor,
+                onTap: () => context.go('/timesheets'),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: CustomButton(
-                text: 'Mes Contrats',
-                onPressed: () {
-                  context.push('/contrats');
+              child: _buildActionCard(
+                context,
+                icon: Icons.work_outline,
+                title: 'Emplois',
+                subtitle: 'Offres disponibles',
+                color: AppTheme.secondaryColor,
+                onTap: () {
+                  // TODO: Naviguer vers les emplois
                 },
-                backgroundColor: AppTheme.accentColor,
-                icon: Icons.description,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
-              child: CustomButton(
-                text: 'Mon Profil',
-                onPressed: () {
-                  context.push('/profile');
+              child: _buildActionCard(
+                context,
+                icon: Icons.description_outlined,
+                title: 'Contrats',
+                subtitle: 'Mes contrats',
+                color: AppTheme.accentColor,
+                onTap: () {
+                  // TODO: Naviguer vers les contrats
                 },
-                backgroundColor: Colors.purple,
-                icon: Icons.person,
               ),
             ),
           ],
@@ -194,89 +226,134 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatisticsSection(TimesheetProvider timesheetProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Statistiques',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Heures cette semaine',
-                '${timesheetProvider.weeklyHours}',
-                Icons.access_time,
-                Colors.blue,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Jours travaillés',
-                '${timesheetProvider.workedDays}',
-                Icons.calendar_today,
-                Colors.green,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Heures supplémentaires',
-                '${timesheetProvider.overtimeHours}',
-                Icons.trending_up,
-                Colors.orange,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Salaire estimé',
-                '${timesheetProvider.estimatedSalary} FCFA',
-                Icons.attach_money,
-                Colors.purple,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return Card(
-      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatistics(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Statistiques',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Heures cette semaine',
+                value: '32h 15min',
+                icon: Icons.access_time,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Jours travaillés',
+                value: '4/5',
+                icon: Icons.calendar_today,
+                color: AppTheme.secondaryColor,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 32),
+            Row(
+              children: [
+                Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 20,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: color,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -284,100 +361,162 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildRecentTimesheetsSection(TimesheetProvider timesheetProvider) {
+  Widget _buildRecentActivities(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Timesheets Récents',
-              style: TextStyle(
-                fontSize: 20,
+            Text(
+              'Activités récentes',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             TextButton(
               onPressed: () {
-                context.push('/timesheets');
+                // TODO: Voir toutes les activités
               },
               child: const Text('Voir tout'),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        if (timesheetProvider.timesheets.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  'Aucun timesheet trouvé',
-                  style: TextStyle(color: Colors.grey),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildActivityItem(
+                  context,
+                  icon: Icons.login,
+                  title: 'Pointage d\'entrée',
+                  subtitle: 'Aujourd\'hui à 08:30',
+                  color: AppTheme.successColor,
                 ),
-              ),
-            ),
-          )
-        else
-          ...timesheetProvider.timesheets.take(3).map((timesheet) => 
-            Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: _getStatusColor(timesheet.status),
-                  child: Icon(
-                    _getStatusIcon(timesheet.status),
-                    color: Colors.white,
-                  ),
+                const Divider(),
+                _buildActivityItem(
+                  context,
+                  icon: Icons.logout,
+                  title: 'Pointage de sortie',
+                  subtitle: 'Hier à 17:45',
+                  color: AppTheme.errorColor,
                 ),
-                title: Text(
-                  '${timesheet.datePointage}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                const Divider(),
+                _buildActivityItem(
+                  context,
+                  icon: Icons.check_circle,
+                  title: 'Timesheet approuvée',
+                  subtitle: 'Il y a 2 jours',
+                  color: AppTheme.successColor,
                 ),
-                subtitle: Text(
-                  '${timesheet.heureDebut} - ${timesheet.heureFin}',
-                ),
-                trailing: Text(
-                  '${timesheet.heuresTravaillees}h',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                onTap: () {
-                  // TODO: Navigate to timesheet detail
-                },
-              ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'VALIDE':
-        return Colors.green;
-      case 'EN_ATTENTE_VALIDATION':
-        return Colors.orange;
-      case 'REJETE':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+  Widget _buildActivityItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'VALIDE':
-        return Icons.check;
-      case 'EN_ATTENTE_VALIDATION':
-        return Icons.pending;
-      case 'REJETE':
-        return Icons.close;
-      default:
-        return Icons.help;
-    }
+class _TimesheetsTab extends StatelessWidget {
+  const _TimesheetsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pointage'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              context.go('/clock-in-out');
+            },
+          ),
+        ],
+      ),
+      body: const Center(
+        child: Text('Écran de pointage - À implémenter'),
+      ),
+    );
+  }
+}
+
+class _ProfileTab extends StatelessWidget {
+  const _ProfileTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profil'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final authProvider = context.read<AuthProvider>();
+              await authProvider.logout();
+              if (context.mounted) {
+                context.go('/auth/login');
+              }
+            },
+          ),
+        ],
+      ),
+      body: const Center(
+        child: Text('Écran de profil - À implémenter'),
+      ),
+    );
   }
 }

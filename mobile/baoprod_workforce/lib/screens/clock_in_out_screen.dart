@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
-
 import '../providers/timesheet_provider.dart';
-import '../widgets/custom_button.dart';
+import '../services/location_service.dart';
 import '../utils/constants.dart';
+import '../widgets/custom_button.dart';
 
 class ClockInOutScreen extends StatefulWidget {
   const ClockInOutScreen({super.key});
@@ -17,9 +15,9 @@ class ClockInOutScreen extends StatefulWidget {
 
 class _ClockInOutScreenState extends State<ClockInOutScreen> {
   bool _isLoading = false;
-  bool _isGettingLocation = false;
+  String? _error;
+  String? _currentLocation;
   Position? _currentPosition;
-  String? _locationError;
 
   @override
   void initState() {
@@ -29,75 +27,61 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
 
   Future<void> _getCurrentLocation() async {
     setState(() {
-      _isGettingLocation = true;
-      _locationError = null;
+      _isLoading = true;
+      _error = null;
     });
 
     try {
-      // Check location permission
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          setState(() {
-            _locationError = 'Permission de localisation refusée';
-            _isGettingLocation = false;
-          });
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        setState(() {
-          _locationError = 'Permission de localisation définitivement refusée';
-          _isGettingLocation = false;
-        });
-        return;
-      }
-
-      // Get current position
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
-      );
-
+      final position = await LocationService.instance.getCurrentPosition();
       setState(() {
         _currentPosition = position;
-        _isGettingLocation = false;
+        _currentLocation = LocationService.instance.formatPosition(position);
+        _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _locationError = 'Erreur lors de la récupération de la position: $e';
-        _isGettingLocation = false;
+        _error = e.toString();
+        _isLoading = false;
       });
     }
   }
 
-  Future<void> _clockIn() async {
+  Future<void> _handleClockIn() async {
     if (_currentPosition == null) {
-      _showErrorDialog('Impossible de pointer sans localisation');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Position non disponible'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _error = null;
     });
 
     try {
-      final timesheetProvider = Provider.of<TimesheetProvider>(context, listen: false);
+      final timesheetProvider = context.read<TimesheetProvider>();
       final success = await timesheetProvider.clockIn(
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,
       );
 
-      if (success) {
-        _showSuccessDialog('Pointage d\'entrée réussi !');
-        context.pop();
-      } else {
-        _showErrorDialog('Erreur lors du pointage d\'entrée');
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pointage d\'entrée enregistré'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        context.go('/dashboard');
       }
     } catch (e) {
-      _showErrorDialog('Erreur: $e');
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
       setState(() {
         _isLoading = false;
@@ -105,68 +89,47 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
     }
   }
 
-  Future<void> _clockOut() async {
+  Future<void> _handleClockOut() async {
     if (_currentPosition == null) {
-      _showErrorDialog('Impossible de pointer sans localisation');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Position non disponible'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _error = null;
     });
 
     try {
-      final timesheetProvider = Provider.of<TimesheetProvider>(context, listen: false);
+      final timesheetProvider = context.read<TimesheetProvider>();
       final success = await timesheetProvider.clockOut(
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,
       );
 
-      if (success) {
-        _showSuccessDialog('Pointage de sortie réussi !');
-        context.pop();
-      } else {
-        _showErrorDialog('Erreur lors du pointage de sortie');
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pointage de sortie enregistré'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+        context.go('/dashboard');
       }
     } catch (e) {
-      _showErrorDialog('Erreur: $e');
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
-  }
-
-  void _showSuccessDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Succès'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Erreur'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -174,228 +137,285 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pointage'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/dashboard'),
+        ),
       ),
-      body: Consumer<TimesheetProvider>(
-        builder: (context, timesheetProvider, child) {
-          final currentTimesheet = timesheetProvider.currentTimesheet;
-          final isClockedIn = currentTimesheet != null && currentTimesheet.status == 'EN_COURS';
-          
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Current Status Card
-                Card(
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Icon(
-                          isClockedIn ? Icons.login : Icons.logout,
-                          size: 64,
-                          color: isClockedIn ? Colors.red : Colors.green,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          isClockedIn ? 'Vous êtes en service' : 'Vous n\'êtes pas en service',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (isClockedIn && currentTimesheet != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            'Depuis: ${currentTimesheet.heureDebut}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Location Status
-                _buildLocationStatus(),
-                
-                const SizedBox(height: 20),
-                
-                // Clock In/Out Button
-                CustomButton(
-                  text: isClockedIn ? 'Pointer Sortie' : 'Pointer Entrée',
-                  onPressed: _isLoading || _isGettingLocation || _currentPosition == null
-                      ? null
-                      : (isClockedIn ? _clockOut : _clockIn),
-                  backgroundColor: isClockedIn ? Colors.red : Colors.green,
-                  icon: isClockedIn ? Icons.logout : Icons.login,
-                  isLoading: _isLoading,
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Additional Info
-                if (isClockedIn && currentTimesheet != null)
-                  _buildCurrentSessionInfo(currentTimesheet),
-                
-                const SizedBox(height: 20),
-                
-                // Location Details
-                if (_currentPosition != null)
-                  _buildLocationDetails(),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildLocationStatus() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppConstants.defaultPadding),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Statut de Localisation',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (_isGettingLocation)
-              const Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 8),
-                  Text('Récupération de la position...'),
-                ],
-              )
-            else if (_locationError != null)
-              Row(
-                children: [
-                  const Icon(Icons.error, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _locationError!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _getCurrentLocation,
-                    child: const Text('Réessayer'),
-                  ),
-                ],
-              )
-            else if (_currentPosition != null)
-              const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Position récupérée avec succès'),
-                ],
-              ),
+            // En-tête
+            _buildHeader(),
+            
+            const SizedBox(height: 32),
+            
+            // Position actuelle
+            _buildLocationCard(),
+            
+            const SizedBox(height: 32),
+            
+            // Actions de pointage
+            _buildClockActions(),
+            
+            const SizedBox(height: 24),
+            
+            // Informations supplémentaires
+            _buildAdditionalInfo(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCurrentSessionInfo(dynamic currentTimesheet) {
+  Widget _buildHeader() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Icon(
+              Icons.access_time,
+              size: 64,
+              color: AppTheme.primaryColor,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pointage Géolocalisé',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Votre position sera enregistrée automatiquement',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationCard() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Session Actuelle',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Heure d\'entrée:'),
+                Icon(
+                  Icons.location_on,
+                  color: AppTheme.primaryColor,
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  currentTimesheet.heureDebut,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  'Position actuelle',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _isLoading ? null : _getCurrentLocation,
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Durée:'),
-                Text(
-                  _calculateDuration(currentTimesheet.heureDebut),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 12),
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
                 ),
-              ],
-            ),
+              )
+            else if (_error != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: AppTheme.errorColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: AppTheme.errorColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (_currentLocation != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.successColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: AppTheme.successColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _currentLocation!,
+                        style: TextStyle(
+                          color: AppTheme.successColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning_outlined,
+                      color: AppTheme.warningColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Position non disponible',
+                        style: TextStyle(
+                          color: AppTheme.warningColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLocationDetails() {
+  Widget _buildClockActions() {
+    return Consumer<TimesheetProvider>(
+      builder: (context, timesheetProvider, child) {
+        final currentTimesheet = timesheetProvider.currentTimesheet;
+        final canClockIn = currentTimesheet == null || currentTimesheet.isCompleted;
+        final canClockOut = currentTimesheet != null && currentTimesheet.isClockInOnly;
+
+        return Column(
+          children: [
+            // Bouton d'entrée
+            if (canClockIn)
+              CustomButton(
+                text: 'Pointage d\'entrée',
+                onPressed: _isLoading ? null : _handleClockIn,
+                isLoading: _isLoading,
+                type: ButtonType.success,
+                icon: Icons.login,
+                size: ButtonSize.large,
+              ),
+
+            if (canClockIn && canClockOut) const SizedBox(height: 16),
+
+            // Bouton de sortie
+            if (canClockOut)
+              CustomButton(
+                text: 'Pointage de sortie',
+                onPressed: _isLoading ? null : _handleClockOut,
+                isLoading: _isLoading,
+                type: ButtonType.danger,
+                icon: Icons.logout,
+                size: ButtonSize.large,
+              ),
+
+            // Message d'état
+            if (!canClockIn && !canClockOut)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.infoColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AppTheme.infoColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Vous avez déjà pointé aujourd\'hui',
+                        style: TextStyle(
+                          color: AppTheme.infoColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAdditionalInfo() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Détails de Localisation',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            Text(
+              'Informations importantes',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
+            const SizedBox(height: 12),
+            _buildInfoItem(
+              icon: Icons.location_on,
+              text: 'Votre position GPS sera enregistrée pour validation',
+            ),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Latitude:'),
-                Text(_currentPosition!.latitude.toStringAsFixed(6)),
-              ],
+            _buildInfoItem(
+              icon: Icons.access_time,
+              text: 'L\'heure de pointage est automatiquement synchronisée',
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Longitude:'),
-                Text(_currentPosition!.longitude.toStringAsFixed(6)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Précision:'),
-                Text('${_currentPosition!.accuracy.toStringAsFixed(1)}m'),
-              ],
+            const SizedBox(height: 8),
+            _buildInfoItem(
+              icon: Icons.security,
+              text: 'Toutes les données sont sécurisées et chiffrées',
             ),
           ],
         ),
@@ -403,18 +423,28 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
     );
   }
 
-  String _calculateDuration(String startTime) {
-    try {
-      final now = DateTime.now();
-      final start = DateTime.parse('${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} $startTime');
-      final duration = now.difference(start);
-      
-      final hours = duration.inHours;
-      final minutes = duration.inMinutes % 60;
-      
-      return '${hours}h ${minutes}m';
-    } catch (e) {
-      return 'N/A';
-    }
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String text,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: AppTheme.textSecondaryColor,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondaryColor,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

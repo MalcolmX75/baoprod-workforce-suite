@@ -5,8 +5,11 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/timesheet_provider.dart';
+import 'providers/job_provider.dart';
 import 'services/api_service.dart';
 import 'services/storage_service.dart';
+import 'services/location_service.dart';
+import 'services/notification_service.dart';
 import 'utils/app_router.dart';
 import 'utils/app_theme.dart';
 import 'utils/constants.dart';
@@ -24,6 +27,12 @@ void main() async {
   // Initialize API service
   await ApiService.init();
   
+  // Initialize location service
+  await LocationService.instance.ensureLocationPermission();
+  
+  // Initialize notification service
+  await NotificationService.instance.init();
+  
   runApp(const BaoProdWorkforceApp());
 }
 
@@ -36,6 +45,7 @@ class BaoProdWorkforceApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TimesheetProvider()),
+        ChangeNotifierProvider(create: (_) => JobProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {

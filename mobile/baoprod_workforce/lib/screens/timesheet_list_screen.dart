@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
-
 import '../providers/timesheet_provider.dart';
 import '../utils/constants.dart';
 
@@ -13,84 +11,91 @@ class TimesheetListScreen extends StatefulWidget {
 }
 
 class _TimesheetListScreenState extends State<TimesheetListScreen> {
-  String _selectedFilter = 'Tous';
-  final List<String> _filterOptions = ['Tous', 'En cours', 'Validés', 'Rejetés'];
-
   @override
   void initState() {
     super.initState();
-    _loadTimesheets();
-  }
-
-  Future<void> _loadTimesheets() async {
-    final timesheetProvider = Provider.of<TimesheetProvider>(context, listen: false);
-    await timesheetProvider.loadTimesheets();
-  }
-
-  List<dynamic> _getFilteredTimesheets(List<dynamic> timesheets) {
-    switch (_selectedFilter) {
-      case 'En cours':
-        return timesheets.where((t) => t.status == 'EN_ATTENTE_VALIDATION').toList();
-      case 'Validés':
-        return timesheets.where((t) => t.status == 'VALIDE').toList();
-      case 'Rejetés':
-        return timesheets.where((t) => t.status == 'REJETE').toList();
-      default:
-        return timesheets;
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TimesheetProvider>().loadTimesheets();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mes Timesheets'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text('Feuilles de temps'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              context.read<TimesheetProvider>().loadTimesheets(refresh: true);
+            },
           ),
         ],
       ),
       body: Consumer<TimesheetProvider>(
         builder: (context, timesheetProvider, child) {
-          final timesheets = _getFilteredTimesheets(timesheetProvider.timesheets);
-          
-          if (timesheetProvider.isLoading) {
+          if (timesheetProvider.isLoading && timesheetProvider.timesheets.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          if (timesheets.isEmpty) {
+          if (timesheetProvider.error != null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.access_time,
+                    Icons.error_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: AppTheme.errorColor,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _selectedFilter == 'Tous' 
-                        ? 'Aucun timesheet trouvé'
-                        : 'Aucun timesheet $selectedFilter.toLowerCase() trouvé',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    'Erreur de chargement',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Vos pointages apparaîtront ici',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
+                    timesheetProvider.error!,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      timesheetProvider.loadTimesheets(refresh: true);
+                    },
+                    child: const Text('Réessayer'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (timesheetProvider.timesheets.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.access_time_outlined,
+                    size: 64,
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Aucune feuille de temps',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Vos feuilles de temps apparaîtront ici',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondaryColor,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -98,192 +103,235 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: _loadTimesheets,
-            child: Column(
-              children: [
-                // Filter Chip
-                if (_selectedFilter != 'Tous')
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Filtre: $_selectedFilter',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedFilter = 'Tous';
-                            });
-                          },
-                          child: const Text('Effacer'),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                // Timesheets List
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: timesheets.length,
-                    itemBuilder: (context, index) {
-                      final timesheet = timesheets[index];
-                      return _buildTimesheetCard(timesheet);
-                    },
-                  ),
-                ),
-              ],
+            onRefresh: () async {
+              await timesheetProvider.loadTimesheets(refresh: true);
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(AppConstants.defaultPadding),
+              itemCount: timesheetProvider.timesheets.length,
+              itemBuilder: (context, index) {
+                final timesheet = timesheetProvider.timesheets[index];
+                return _buildTimesheetCard(context, timesheet);
+              },
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push('/clock-in-out');
-        },
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
-  Widget _buildTimesheetCard(dynamic timesheet) {
+  Widget _buildTimesheetCard(BuildContext context, timesheet) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: InkWell(
-        onTap: () {
-          _showTimesheetDetails(timesheet);
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with date and status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    timesheet.datePointage,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // En-tête avec date et statut
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDate(timesheet.datePointage),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  _buildStatusChip(timesheet.status),
-                ],
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Time information
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTimeInfo(
-                      'Entrée',
-                      timesheet.heureDebut,
-                      Icons.login,
-                      Colors.green,
-                    ),
+                ),
+                _buildStatusChip(timesheet.status),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Heures de travail
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTimeInfo(
+                    context,
+                    icon: Icons.login,
+                    label: 'Entrée',
+                    time: timesheet.heureDebut != null 
+                        ? _formatTime(timesheet.heureDebut)
+                        : 'Non pointé',
+                    color: AppTheme.successColor,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTimeInfo(
-                      'Sortie',
-                      timesheet.heureFin ?? 'En cours',
-                      Icons.logout,
-                      Colors.red,
-                    ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTimeInfo(
+                    context,
+                    icon: Icons.logout,
+                    label: 'Sortie',
+                    time: timesheet.heureFin != null 
+                        ? _formatTime(timesheet.heureFin)
+                        : 'Non pointé',
+                    color: AppTheme.errorColor,
                   ),
-                ],
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Hours worked
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Heures travaillées:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${timesheet.heuresTravaillees}h',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Heures travaillées
+            if (timesheet.heuresTravailleesMinutes != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
                       color: AppTheme.primaryColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Heures travaillées: ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      timesheet.formattedHeuresTravaillees,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            // Heures supplémentaires
+            if (timesheet.heuresSupplementairesMinutes != null && timesheet.heuresSupplementairesMinutes! > 0)
+              const SizedBox(height: 8),
+            if (timesheet.heuresSupplementairesMinutes != null && timesheet.heuresSupplementairesMinutes! > 0)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.schedule,
+                      color: AppTheme.accentColor,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Heures supplémentaires: ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      timesheet.formattedHeuresSupplementaires,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            // Localisation
+            if (timesheet.latitude != null && timesheet.longitude != null)
+              const SizedBox(height: 12),
+            if (timesheet.latitude != null && timesheet.longitude != null)
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: AppTheme.textSecondaryColor,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Pointage géolocalisé',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
                     ),
                   ),
                 ],
               ),
-              
-              // Overtime hours
-              if (timesheet.heuresSupplementaires > 0) ...[
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Heures supplémentaires:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${timesheet.heuresSupplementaires}h',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              
-              // Location info
-              if (timesheet.latitude != null && timesheet.longitude != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Pointage géolocalisé',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTimeInfo(String label, String time, IconData icon, Color color) {
+  Widget _buildStatusChip(String status) {
+    Color color;
+    String text;
+    
+    switch (status) {
+      case 'draft':
+        color = AppTheme.warningColor;
+        text = 'Brouillon';
+        break;
+      case 'submitted':
+        color = AppTheme.infoColor;
+        text = 'Soumis';
+        break;
+      case 'approved':
+        color = AppTheme.successColor;
+        text = 'Approuvé';
+        break;
+      case 'rejected':
+        color = AppTheme.errorColor;
+        text = 'Rejeté';
+        break;
+      default:
+        color = AppTheme.textSecondaryColor;
+        text = 'Inconnu';
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeInfo(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String time,
+    required Color color,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: color),
+            Icon(
+              icon,
+              color: color,
+              size: 16,
+            ),
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondaryColor,
               ),
             ),
           ],
@@ -291,155 +339,31 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
         const SizedBox(height: 4),
         Text(
           time,
-          style: const TextStyle(
-            fontSize: 16,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
+            color: color,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildStatusChip(String status) {
-    Color backgroundColor;
-    Color textColor;
-    String statusText;
-
-    switch (status) {
-      case 'VALIDE':
-        backgroundColor = Colors.green;
-        textColor = Colors.white;
-        statusText = 'Validé';
-        break;
-      case 'EN_ATTENTE_VALIDATION':
-        backgroundColor = Colors.orange;
-        textColor = Colors.white;
-        statusText = 'En attente';
-        break;
-      case 'REJETE':
-        backgroundColor = Colors.red;
-        textColor = Colors.white;
-        statusText = 'Rejeté';
-        break;
-      case 'EN_COURS':
-        backgroundColor = Colors.blue;
-        textColor = Colors.white;
-        statusText = 'En cours';
-        break;
-      default:
-        backgroundColor = Colors.grey;
-        textColor = Colors.white;
-        statusText = status;
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dateOnly = DateTime(date.year, date.month, date.day);
+    
+    if (dateOnly == today) {
+      return 'Aujourd\'hui';
+    } else if (dateOnly == yesterday) {
+      return 'Hier';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
     }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        statusText,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
   }
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filtrer les timesheets'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _filterOptions.map((filter) => RadioListTile<String>(
-            title: Text(filter),
-            value: filter,
-            groupValue: _selectedFilter,
-            onChanged: (value) {
-              setState(() {
-                _selectedFilter = value!;
-              });
-              Navigator.of(context).pop();
-            },
-          )).toList(),
-        ),
-      ),
-    );
-  }
-
-  void _showTimesheetDetails(dynamic timesheet) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Timesheet - ${timesheet.datePointage}'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Statut', _getStatusText(timesheet.status)),
-              _buildDetailRow('Heure d\'entrée', timesheet.heureDebut),
-              _buildDetailRow('Heure de sortie', timesheet.heureFin ?? 'En cours'),
-              _buildDetailRow('Heures travaillées', '${timesheet.heuresTravaillees}h'),
-              if (timesheet.heuresSupplementaires > 0)
-                _buildDetailRow('Heures supplémentaires', '${timesheet.heuresSupplementaires}h'),
-              if (timesheet.latitude != null && timesheet.longitude != null) ...[
-                _buildDetailRow('Latitude', timesheet.latitude.toString()),
-                _buildDetailRow('Longitude', timesheet.longitude.toString()),
-              ],
-              if (timesheet.commentaires != null && timesheet.commentaires.isNotEmpty)
-                _buildDetailRow('Commentaires', timesheet.commentaires),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'VALIDE':
-        return 'Validé';
-      case 'EN_ATTENTE_VALIDATION':
-        return 'En attente de validation';
-      case 'REJETE':
-        return 'Rejeté';
-      case 'EN_COURS':
-        return 'En cours';
-      default:
-        return status;
-    }
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 }
