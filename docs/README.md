@@ -1,113 +1,129 @@
-# BaoProd Workforce Suite - Documentation Projet
+# 📚 BaoProd Workforce Suite - Documentation
+
+## 🎯 Vue d'Ensemble
+
+**BaoProd Workforce Suite** est une solution complète de gestion d'intérim et de staffing pour les entreprises de la zone CEMAC (6 pays).
+
+### 📊 Statut du Projet
+- **Repository** : https://github.com/MalcolmX75/baoprod-workforce-suite
+- **Production** : https://workforce.baoprod.com
+- **Sprint 1-2** : ✅ Terminés (Laravel SaaS + 3 modules)
+- **Sprint 3** : 🚧 En cours (Application mobile Flutter)
+- **Sprint 4** : 📋 Planifié (Frontend web + Production)
+
+---
 
 ## 📁 Structure de la Documentation
 
-Ce dossier centralise tous les documents du projet BaoProd Workforce Suite, organisés par catégories pour une navigation optimale.
+### 🚀 [01-PROJET](01-PROJET/)
+**Informations générales du projet**
+- [Vue d'ensemble](01-PROJET/00-VUE-ENSEMBLE.md)
+- [Cahier des charges](01-PROJET/01-CAHIER-DES-CHARGES.md)
+- [Architecture technique](01-PROJET/02-ARCHITECTURE.md)
+- [Planning et budget](01-PROJET/03-PLANNING-BUDGET.md)
 
-### 📋 01 - Cahiers des Charges
-**Dossier** : `01-cahiers-des-charges/`
+### 🏗️ [02-TECHNIQUE](02-TECHNIQUE/)
+**Documentation technique détaillée**
+- [Backend Laravel](02-TECHNIQUE/01-BACKEND-LARAVEL.md)
+- [API REST](02-TECHNIQUE/02-API-REST.md)
+- [Base de données](02-TECHNIQUE/03-BASE-DONNEES.md)
+- [Mobile Flutter](02-TECHNIQUE/04-MOBILE-FLUTTER.md)
+- [Déploiement](02-TECHNIQUE/05-DEPLOIEMENT.md)
 
-Documents définissant les besoins et spécifications du projet :
-- `Cahier_des_Charges_Application_Interim (3).docx` - Cahier des charges initial client
-- `cdc_saas_interim.md` - Cahier des charges SaaS (version Markdown)
-- `cahier-des-charges-technique-complet.md` - **Cahier des charges technique final** ⭐
+### 🌍 [03-CEMAC](03-CEMAC/)
+**Configuration multi-pays CEMAC**
+- [Législation du travail](03-CEMAC/01-LEGISLATION.md)
+- [Configuration pays](03-CEMAC/02-CONFIGURATION-PAYS.md)
+- [Calculs automatiques](03-CEMAC/03-CALCULS-AUTOMATIQUES.md)
 
-### 💰 02 - Devis Commerciaux
-**Dossier** : `02-devis-commerciaux/`
+### 📋 [04-DEVELOPPEMENT](04-DEVELOPPEMENT/)
+**Suivi du développement**
+- [Sprints et progression](04-DEVELOPPEMENT/01-SPRINTS.md)
+- [Tests et qualité](04-DEVELOPPEMENT/02-TESTS-QUALITE.md)
+- [Issues et bugs](04-DEVELOPPEMENT/03-ISSUES-BUGS.md)
 
-Propositions commerciales et devis :
-- `Devis_Option1_WordPress.docx` - Option WordPress + Plugin
-- `Devis_Option2_FullDev.docx` - Option Développement complet
-- `Devis_Option3_SaaS.docx` - Option SaaS
-- `Devis_S00026_JLC.pdf` - Devis S00026
-- `Devis_S00027_JLC.pdf` - Devis S00027
-- `Devis_S00028_JLC.pdf` - Devis S00028
+### 💼 [05-COMMERCIAL](05-COMMERCIAL/)
+**Documents commerciaux**
+- [Devis et offres](05-COMMERCIAL/01-DEVIS-OFFRES.md)
+- [Contrats clients](05-COMMERCIAL/02-CONTRATS.md)
 
-### 🏗️ 03 - Offres Techniques
-**Dossier** : `03-offres-techniques/`
-
-Documents techniques et présentations :
-- `Offre_Technique_JCL.docx` - Offre technique initiale
-- `Offre_Technique_JCL_Enrichie.docx` - Offre technique enrichie
-- `Offre_Technique_JCL.pdf` - Offre technique (PDF)
-- `JLC Group - Comprehension du besoin.v1.0.pptx` - Présentation compréhension besoin
-
-### ⚖️ 04 - Législation
-**Dossier** : `04-legislation/`
-
-Documents légaux et réglementaires :
-- `legislation-droit-travail-cemac.md` - **Législation du travail CEMAC** ⭐
-
-### 🔧 05 - Technique
-**Dossier** : `05-technique/`
-
-Documentation technique et architecture :
-- `wordpress-plugin-structure.md` - Structure plugin WordPress
-- `saas_interim_recommendations.md` - Recommandations SaaS
-
-### 💬 06 - Conversations
-**Dossier** : `06-conversations/`
-
-Historique des échanges et décisions :
-- `conversations-log.md` - **Journal des conversations** ⭐
+### 📞 [06-SUPPORT](06-SUPPORT/)
+**Support et maintenance**
+- [Guide utilisateur](06-SUPPORT/01-GUIDE-UTILISATEUR.md)
+- [Formation](06-SUPPORT/02-FORMATION.md)
+- [Maintenance](06-SUPPORT/03-MAINTENANCE.md)
 
 ---
 
-## 🎯 Documents Clés
+## 🚀 Accès Rapide
 
-### ⭐ Documents Prioritaires
-1. **`01-cahiers-des-charges/cahier-des-charges-technique-complet.md`**
-   - Cahier des charges technique final
-   - Spécifications complètes des 7 modules
-   - Architecture, planning, coûts
+### ⭐ Documents Essentiels
+- **[Vue d'ensemble](01-PROJET/00-VUE-ENSEMBLE.md)** - Résumé complet du projet
+- **[Architecture technique](01-PROJET/02-ARCHITECTURE.md)** - Architecture système
+- **[API REST](02-TECHNIQUE/02-API-REST.md)** - Documentation API
+- **[Mobile Flutter](02-TECHNIQUE/04-MOBILE-FLUTTER.md)** - Application mobile
+- **[Sprints](04-DEVELOPPEMENT/01-SPRINTS.md)** - Suivi développement
 
-2. **`04-legislation/legislation-droit-travail-cemac.md`**
-   - Législation du travail pour 6 pays CEMAC
-   - Types de contrats, taux, charges sociales
-   - Configuration technique pour le plugin
+### 🔧 Pour les Développeurs
+- **[Backend Laravel](02-TECHNIQUE/01-BACKEND-LARAVEL.md)**
+- **[Base de données](02-TECHNIQUE/03-BASE-DONNEES.md)**
+- **[Tests et qualité](04-DEVELOPPEMENT/02-TESTS-QUALITE.md)**
+- **[Déploiement](02-TECHNIQUE/05-DEPLOIEMENT.md)**
 
-3. **`06-conversations/conversations-log.md`**
-   - Historique complet des échanges
-   - Décisions prises et évolutions
-   - Suivi du projet
-
-### 📊 Résumé du Projet
-
-**Objectif** : Développement d'un plugin WordPress "BaoProd Workforce Suite" complétant le thème Workscout pour la gestion d'intérim et de staffing.
-
-**Approche** : Plugin modulaire avec 7 modules spécialisés :
-1. Contrats & Signature
-2. Timesheets & Pointage
-3. Paie & Facturation
-4. Absences & Congés
-5. Reporting & BI
-6. Messagerie & Notifications
-7. Compliance & Audit
-
-**Investissement** : 66,200€ sur 18 semaines
-
-**Pays cibles** : Gabon, Cameroun, Tchad, RCA, Guinée Équatoriale, Congo
+### 💼 Pour les Clients
+- **[Cahier des charges](01-PROJET/01-CAHIER-DES-CHARGES.md)**
+- **[Planning et budget](01-PROJET/03-PLANNING-BUDGET.md)**
+- **[Guide utilisateur](06-SUPPORT/01-GUIDE-UTILISATEUR.md)**
+- **[Formation](06-SUPPORT/02-FORMATION.md)**
 
 ---
 
-## 🚀 Prochaines Étapes
+## 📊 Métriques du Projet
 
-1. **Validation** du cahier des charges technique par le client
-2. **Démarrage** du développement du plugin
-3. **Phase 1** : Foundation (4 semaines)
-4. **Phase 2** : Core Modules (6 semaines)
-5. **Phase 3** : Advanced Features (4 semaines)
-6. **Phase 4** : Mobile & Integrations (4 semaines)
+### Code
+- **Fichiers** : 1079 fichiers
+- **Lignes de code** : 261,344 lignes
+- **Tests** : 68% de réussite (54/79 tests)
+- **API** : 58 endpoints fonctionnels
+
+### Modules
+- ✅ **Contrats** : Gestion des contrats de travail
+- ✅ **Timesheets** : Pointage et feuilles de temps
+- ✅ **Paie** : Calculs de salaires et charges
+- 🚧 **Mobile** : Application Flutter en cours
+- 📋 **Web** : Frontend Laravel Blade planifié
+
+### Pays CEMAC
+- 🇬🇦 **Gabon** : 28% charges, 80,000 FCFA SMIG
+- 🇨🇲 **Cameroun** : 20% charges, 36,270 FCFA SMIG
+- 🇹🇩 **Tchad** : 25% charges, 60,000 FCFA SMIG
+- 🇨🇫 **RCA** : 25% charges, 35,000 FCFA SMIG
+- 🇬🇶 **Guinée Équatoriale** : 26.5% charges, 150,000 FCFA SMIG
+- 🇨🇬 **Congo** : 25% charges, 90,000 FCFA SMIG
 
 ---
 
-## 📞 Contact
+## 🎯 Prochaines Étapes
 
-**BaoProd** - Développement WordPress & Solutions Digitales
-- **Projet** : BaoProd Workforce Suite
-- **Client** : Entreprises CEMAC (générique)
-- **Statut** : En cours de développement
+### Cette Semaine
+1. **Finaliser l'app mobile** Flutter
+2. **Corriger les tests** qui échouent
+3. **Valider l'API** complètement
+
+### Court Terme (2-3 semaines)
+1. **Développer le frontend web** Laravel Blade
+2. **Déployer en production** finale
+3. **Formation client**
 
 ---
 
-*Dernière mise à jour : Janvier 2025*
+## 📞 Contact et Support
+
+- **Repository** : https://github.com/MalcolmX75/baoprod-workforce-suite
+- **Production** : https://workforce.baoprod.com
+- **Email** : support@baoprod.com
+- **Issues** : GitHub Issues
+
+---
+
+*Dernière mise à jour : 3 Janvier 2025*
