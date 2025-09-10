@@ -47,9 +47,21 @@ class User {
       type: json['type'] ?? 'employee',
       status: json['status'] ?? 'active',
       tenantId: json['tenant_id'] ?? json['tenantId'],
-      settings: json['settings'],
-      createdAt: DateTime.parse(json['created_at'] ?? json['createdAt']),
-      updatedAt: DateTime.parse(json['updated_at'] ?? json['updatedAt']),
+      settings: json['settings'] is Map<String, dynamic> 
+          ? json['settings'] as Map<String, dynamic>
+          : json['settings'] is Map
+              ? Map<String, dynamic>.from(json['settings'])
+              : null,
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : (json['createdAt'] != null 
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now()),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at']) 
+          : (json['updatedAt'] != null 
+              ? DateTime.parse(json['updatedAt'])
+              : DateTime.now()),
     );
   }
   

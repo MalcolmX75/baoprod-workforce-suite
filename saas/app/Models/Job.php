@@ -21,6 +21,7 @@ class Job extends Model
         'latitude',
         'longitude',
         'type',
+        'category',
         'status',
         'salary_min',
         'salary_max',

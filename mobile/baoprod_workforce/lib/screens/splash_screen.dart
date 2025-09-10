@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/onboarding_provider.dart';
 import '../utils/constants.dart';
+// import '../utils/app_theme.dart'; // Remove this import
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +23,11 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _checkAuthAndNavigate();
+    
+    // Déplacer l'initialisation après le build pour éviter setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthAndNavigate();
+    });
   }
 
   void _setupAnimations() {
@@ -50,6 +56,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuthAndNavigate() async {
+    // Initialiser l'onboarding provider
+    final onboardingProvider = context.read<OnboardingProvider>();
+    await onboardingProvider.init();
+
     // Attendre un minimum de 2 secondes pour l'animation
     await Future.delayed(const Duration(milliseconds: 2000));
 
@@ -59,6 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
     
     // Vérifier l'authentification
     if (authProvider.isAuthenticated) {
+      // L'onboarding sera affiché automatiquement par le redirect
       context.go('/dashboard');
     } else {
       context.go('/auth/login');
@@ -74,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: Theme.of(context).primaryColor, // Refactored
       body: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -101,9 +112,9 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon( // Changed to non-const
                         Icons.work_outline,
-                        color: AppTheme.primaryColor,
+                        color: Theme.of(context).primaryColor, // Refactored
                         size: 60,
                       ),
                     ),

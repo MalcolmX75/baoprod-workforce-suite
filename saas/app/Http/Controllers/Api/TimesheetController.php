@@ -288,7 +288,7 @@ class TimesheetController extends Controller
     /**
      * Valider un timesheet
      */
-    public function validate(Request $request, string $id): JsonResponse
+    public function validateTimesheet(Request $request, string $id): JsonResponse
     {
         $tenant = app('tenant');
         $user = $request->user();

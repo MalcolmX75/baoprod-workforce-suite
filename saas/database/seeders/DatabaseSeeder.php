@@ -5,9 +5,12 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use BaoProd\Workforce\Models\Tenant;
 use BaoProd\Workforce\Models\User;
-use BaoProd\Workforce\Models\Job;
-use BaoProd\Workforce\Models\Application;
+use Modules\Jobs\Models\Job;
+use Modules\Jobs\Models\JobCategory;
+use Modules\Jobs\Models\JobApplication;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,6 +19,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed the roles and permissions
+        $this->call(RolesAndPermissionsSeeder::class);
+
         // Create a test tenant
         $tenant = Tenant::create([
             'name' => 'BaoProd Gabon',
@@ -25,8 +31,8 @@ class DatabaseSeeder extends Seeder
             'currency' => 'XOF',
             'language' => 'fr',
             'settings' => [
-                'timezone' => 'Africa/Libreville',
-                'date_format' => 'd/m/Y',
+                'timezone' => 'Africa\/Libreville',
+                'date_format' => 'd\/m\/Y',
                 'time_format' => 'H:i',
             ],
             'modules' => ['core', 'contrats', 'timesheets', 'paie'],
@@ -45,6 +51,8 @@ class DatabaseSeeder extends Seeder
             'type' => 'admin',
             'is_active' => true,
         ]);
+        $adminRole = Role::findByName('admin', 'web');
+        $admin->assignRole($adminRole);
 
         // Create employer user
         $employer = User::create([
@@ -59,14 +67,16 @@ class DatabaseSeeder extends Seeder
                 'company_name' => 'Entreprise Gabonaise SARL',
                 'company_size' => '50-100',
                 'industry' => 'Construction',
-                'website' => 'https://entreprise-gabon.com',
+                'website' => 'https:\/\/entreprise-gabon.com',
                 'description' => 'Entreprise spécialisée dans la construction et les travaux publics au Gabon.',
             ],
             'is_active' => true,
         ]);
+        $employerRole = Role::findByName('employer', 'web');
+        $employer->assignRole($employerRole);
 
         // Create candidate users
-        $candidates = [
+        $candidates_data = [
             [
                 'first_name' => 'Marie',
                 'last_name' => 'Mba',
@@ -123,8 +133,9 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($candidates as $candidateData) {
-            User::create([
+        $candidateRole = Role::findByName('candidate', 'web');
+        foreach ($candidates_data as $candidateData) {
+            $candidate = User::create([
                 'tenant_id' => $tenant->id,
                 'first_name' => $candidateData['first_name'],
                 'last_name' => $candidateData['last_name'],
@@ -135,7 +146,17 @@ class DatabaseSeeder extends Seeder
                 'profile_data' => $candidateData['profile_data'],
                 'is_active' => true,
             ]);
+            $candidate->assignRole($candidateRole);
         }
+
+        // Create sample job categories
+        $categories = collect(['Informatique', 'Comptabilité', 'Administration', 'Construction', 'Vente'])->map(function ($name) use ($tenant) {
+            return JobCategory::create([
+                'tenant_id' => $tenant->id,
+                'name' => $name,
+                'slug' => Str::slug($name),
+            ]);
+        });
 
         // Create sample jobs
         $jobs = [
@@ -215,6 +236,7 @@ class DatabaseSeeder extends Seeder
             Job::create(array_merge($jobData, [
                 'tenant_id' => $tenant->id,
                 'employer_id' => $employer->id,
+                'job_category_id' => $categories->random()->id,
             ]));
         }
 
@@ -228,7 +250,7 @@ class DatabaseSeeder extends Seeder
             $marie = $candidateUsers->where('email', 'marie.mba@example.com')->first();
             
             if ($developerJob && $marie) {
-                Application::create([
+                JobApplication::create([
                     'tenant_id' => $tenant->id,
                     'job_id' => $developerJob->id,
                     'candidate_id' => $marie->id,
@@ -245,7 +267,7 @@ class DatabaseSeeder extends Seeder
             $pierre = $candidateUsers->where('email', 'pierre.nguema@example.com')->first();
             
             if ($accountingJob && $pierre) {
-                Application::create([
+                JobApplication::create([
                     'tenant_id' => $tenant->id,
                     'job_id' => $accountingJob->id,
                     'candidate_id' => $pierre->id,
@@ -259,13 +281,13 @@ class DatabaseSeeder extends Seeder
         }
 
         // Seed des contrats de test
-        $this->call(ContratSeeder::class);
+        // $this->call(ContratSeeder::class);
         
         // Seed des timesheets de test
-        $this->call(TimesheetSeeder::class);
+        // $this->call(TimesheetSeeder::class);
         
         // Seed des bulletins de paie de test
-        $this->call(PaieSeeder::class);
+        // $this->call(PaieSeeder::class);
 
         $this->command->info('Database seeded successfully!');
         $this->command->info('Test tenant: BaoProd Gabon');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/timesheet_provider.dart';
 import '../utils/constants.dart';
+import '../utils/app_theme.dart';
 
 class TimesheetListScreen extends StatefulWidget {
   const TimesheetListScreen({super.key});
@@ -49,7 +50,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: AppTheme.errorColor,
+                    color: Theme.of(context).colorScheme.error, // Refactored
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -82,7 +83,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                   Icon(
                     Icons.access_time_outlined,
                     size: 64,
-                    color: AppTheme.textSecondaryColor,
+                    color: Theme.of(context).textTheme.bodyMedium?.color, // Refactored
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -93,7 +94,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                   Text(
                     'Vos feuilles de temps apparaîtront ici',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondaryColor,
+                      color: Theme.of(context).textTheme.bodyMedium?.color, // Refactored
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -138,7 +139,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                _buildStatusChip(timesheet.status),
+                _buildStatusChip(context, timesheet.status), // Pass context
               ],
             ),
             
@@ -155,7 +156,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                     time: timesheet.heureDebut != null 
                         ? _formatTime(timesheet.heureDebut)
                         : 'Non pointé',
-                    color: AppTheme.successColor,
+                    color: Theme.of(context).colorScheme.secondary, // Refactored
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -167,7 +168,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                     time: timesheet.heureFin != null 
                         ? _formatTime(timesheet.heureFin)
                         : 'Non pointé',
-                    color: AppTheme.errorColor,
+                    color: Theme.of(context).colorScheme.error, // Refactored
                   ),
                 ),
               ],
@@ -180,14 +181,14 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withOpacity(0.1), // Refactored
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.access_time,
-                      color: AppTheme.primaryColor,
+                      color: Theme.of(context).primaryColor, // Refactored
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -199,7 +200,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                       timesheet.formattedHeuresTravaillees,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
+                        color: Theme.of(context).primaryColor, // Refactored
                       ),
                     ),
                   ],
@@ -213,14 +214,14 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1), // Refactored
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.schedule,
-                      color: AppTheme.accentColor,
+                      color: Theme.of(context).colorScheme.tertiary, // Refactored
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -232,7 +233,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                       timesheet.formattedHeuresSupplementaires,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.accentColor,
+                        color: Theme.of(context).colorScheme.tertiary, // Refactored
                       ),
                     ),
                   ],
@@ -247,7 +248,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                 children: [
                   Icon(
                     Icons.location_on,
-                    color: AppTheme.textSecondaryColor,
+                    color: Theme.of(context).textTheme.bodyMedium?.color, // Refactored
                     size: 16,
                   ),
                   const SizedBox(width: 8),
@@ -255,7 +256,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
                     child: Text(
                       'Pointage géolocalisé',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondaryColor,
+                        color: Theme.of(context).textTheme.bodyMedium?.color ?? AppTheme.textSecondaryColor, // Refactored
                       ),
                     ),
                   ),
@@ -267,29 +268,29 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
     );
   }
 
-  Widget _buildStatusChip(String status) {
+  Widget _buildStatusChip(BuildContext context, String status) { // Added context
     Color color;
     String text;
     
     switch (status) {
       case 'draft':
-        color = AppTheme.warningColor;
+        color = Theme.of(context).colorScheme.tertiary; // Refactored
         text = 'Brouillon';
         break;
       case 'submitted':
-        color = AppTheme.infoColor;
+        color = Theme.of(context).colorScheme.primary; // Refactored
         text = 'Soumis';
         break;
       case 'approved':
-        color = AppTheme.successColor;
+        color = Theme.of(context).colorScheme.secondary; // Refactored
         text = 'Approuvé';
         break;
       case 'rejected':
-        color = AppTheme.errorColor;
+        color = Theme.of(context).colorScheme.error; // Refactored
         text = 'Rejeté';
         break;
       default:
-        color = AppTheme.textSecondaryColor;
+        color = Theme.of(context).textTheme.bodyMedium?.color ?? AppTheme.textSecondaryColor; // Refactored
         text = 'Inconnu';
     }
     
@@ -311,7 +312,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
   }
 
   Widget _buildTimeInfo(
-    BuildContext context, {
+    BuildContext context, { // Added context
     required IconData icon,
     required String label,
     required String time,
@@ -331,7 +332,7 @@ class _TimesheetListScreenState extends State<TimesheetListScreen> {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).textTheme.bodyMedium?.color ?? AppTheme.textSecondaryColor, // Refactored
               ),
             ),
           ],

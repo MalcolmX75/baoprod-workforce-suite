@@ -36,15 +36,77 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     _clearError();
     
+    // MODE DEMO - Simulation de connexion pour test
+    await Future.delayed(Duration(seconds: 1)); // Simulate network delay
+    
+    // Créer un utilisateur de démonstration basé sur l'email
+    Map<String, dynamic> demoUser = {
+      'id': 1,
+      'email': email,
+      'first_name': email.contains('manolinis') ? 'Emmanuel' :
+                    email.contains('admin') ? 'Admin' : 
+                    email.contains('employer') ? 'Jean' :
+                    email.contains('marie') ? 'Marie' : 'Pierre',
+      'last_name': email.contains('manolinis') ? 'Manolinis' :
+                   email.contains('admin') ? 'BaoProd' :
+                   email.contains('employer') ? 'Dupont' :
+                   email.contains('marie') ? 'Mba' : 'Nguema',
+      'type': email.contains('admin') ? 'admin' :
+              email.contains('employer') ? 'employer' : 'candidate',
+      'phone': email.contains('manolinis') ? '+241 06 12 34 56' : '+241 01 23 45 67',
+      'avatar': null,
+      'status': 'active',
+      'tenant_id': 1,
+      'created_at': DateTime.now().subtract(Duration(days: 90)).toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+      'settings': <String, dynamic>{
+        if (email.contains('manolinis'))
+          'preferred_language': 'fr',
+          'notifications_enabled': true,
+          'theme': 'dark'
+      },
+      'profile_data': <String, dynamic>{
+        if (email.contains('manolinis')) ...{
+          'skills': ['Flutter', 'Dart', 'PHP', 'Laravel', 'JavaScript', 'MySQL', 'Git'],
+          'experience_years': 5,
+          'education': 'Master en Informatique',
+          'location': 'Libreville, Gabon',
+          'bio': 'Développeur Flutter passionné avec 5 ans d\'expérience dans le développement mobile et web.',
+          'github': 'manolinis',
+          'linkedin': 'emmanuel-manolinis'
+        } else if (email.contains('marie'))
+          'skills': ['PHP', 'Laravel', 'JavaScript', 'MySQL']
+        else if (email.contains('pierre'))
+          'skills': ['Comptabilité', 'Gestion', 'Excel', 'Sage']
+        else if (email.contains('employer'))
+          'company_name': 'Entreprise Gabonaise SARL'
+      }
+    };
+    
+    _user = User.fromJson(demoUser);
+    await StorageService.saveUser(demoUser);
+    _isAuthenticated = true;
+    
+    notifyListeners();
+    _setLoading(false);
+    return true;
+    
+    /* API CALL DISABLED FOR DEMO
     try {
       final response = await ApiService.login(email, password);
       
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data['data'];
         
         // Save token
         if (data['token'] != null) {
           await ApiService.setAuthToken(data['token']);
+        }
+        
+        // Save Tenant ID
+        if (data['tenant'] != null && data['tenant']['id'] != null) {
+          final tenantId = data['tenant']['id'].toString();
+          await ApiService.setTenant(tenantId);
         }
         
         // Save user data
@@ -66,6 +128,7 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
   
   Future<bool> register(Map<String, dynamic> userData) async {
@@ -76,11 +139,17 @@ class AuthProvider extends ChangeNotifier {
       final response = await ApiService.register(userData);
       
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = response.data;
+        final data = response.data['data'];
         
         // Save token if provided
         if (data['token'] != null) {
           await ApiService.setAuthToken(data['token']);
+        }
+
+        // Save Tenant ID if provided
+        if (data['tenant'] != null && data['tenant']['id'] != null) {
+          final tenantId = data['tenant']['id'].toString();
+          await ApiService.setTenant(tenantId);
         }
         
         // Save user data
@@ -125,6 +194,7 @@ class AuthProvider extends ChangeNotifier {
     
     // Clear storage
     await ApiService.clearAuthToken();
+    await ApiService.clearTenant();
     await StorageService.clearUser();
     await StorageService.clearTimesheetData();
     
@@ -142,7 +212,7 @@ class AuthProvider extends ChangeNotifier {
       final response = await ApiService.getProfile();
       
       if (response.statusCode == 200) {
-        final userData = response.data;
+        final userData = response.data['data']['user'];
         _user = User.fromJson(userData);
         await StorageService.saveUser(userData);
         notifyListeners();

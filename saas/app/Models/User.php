@@ -12,6 +12,8 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasRoles;
+    
+    protected $guard_name = 'web';
 
     protected $fillable = [
         'tenant_id',
@@ -75,11 +77,43 @@ class User extends Authenticatable
     }
 
     /**
+     * Get contracts where this user is the employee
+     */
+    public function employeeContracts(): HasMany
+    {
+        return $this->hasMany(Contrat::class, 'user_id');
+    }
+
+    /**
+     * Get contracts where this user is the employer
+     */
+    public function employerContracts(): HasMany
+    {
+        return $this->hasMany(Contrat::class, 'employer_id');
+    }
+
+    /**
+     * Get all jobs posted by this user (alias for postedJobs)
+     */
+    public function jobs(): HasMany
+    {
+        return $this->postedJobs();
+    }
+
+    /**
      * Get full name attribute
      */
     public function getFullNameAttribute(): string
     {
         return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * Get name attribute (alias for full_name)
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->getFullNameAttribute();
     }
 
     /**

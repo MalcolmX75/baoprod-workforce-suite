@@ -14,6 +14,10 @@ class Job {
   final List<String> requiredSkills;
   final List<String> preferredSkills;
   final String? companyName;
+  final String company;
+  final double salary;
+  final String postedDate;
+  final String requirements;
   final String? companyLogo;
   final String? companyDescription;
   final DateTime startDate;
@@ -24,6 +28,8 @@ class Job {
   final bool isUrgent;
   final bool isFeatured;
   final bool isFavorite;
+  final bool hasApplied;
+  final DateTime? appliedDate;
   final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -44,6 +50,10 @@ class Job {
     required this.requiredSkills,
     required this.preferredSkills,
     this.companyName,
+    required this.company,
+    required this.salary,
+    required this.postedDate,
+    required this.requirements,
     this.companyLogo,
     this.companyDescription,
     required this.startDate,
@@ -54,6 +64,8 @@ class Job {
     required this.isUrgent,
     required this.isFeatured,
     required this.isFavorite,
+    required this.hasApplied,
+    this.appliedDate,
     this.metadata,
     required this.createdAt,
     required this.updatedAt,
@@ -203,37 +215,90 @@ class Job {
   
   factory Job.fromJson(Map<String, dynamic> json) {
     return Job(
-      id: json['id'],
+      id: json['id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       location: json['location'] ?? '',
       category: json['category'] ?? '',
       contractType: json['contract_type'] ?? json['contractType'] ?? 'CDD',
-      status: json['status'] ?? 'open',
+      status: json['status'] ?? 'published',
+      salary: json['salary']?.toDouble() ?? 
+               ((json['salary_min'] != null && json['salary_max'] != null) 
+                 ? ((json['salary_min'] + json['salary_max']) / 2).toDouble()
+                 : json['salary_min']?.toDouble() ?? json['salary_max']?.toDouble() ?? 0.0),
+      postedDate: _formatDate(json['published_at'] ?? json['posted_date'] ?? json['postedDate'] ?? DateTime.now().toIso8601String()),
+      requirements: json['requirements'] ?? '',
       salaryMin: json['salary_min']?.toDouble() ?? json['salaryMin']?.toDouble(),
       salaryMax: json['salary_max']?.toDouble() ?? json['salaryMax']?.toDouble(),
-      salaryCurrency: json['salary_currency'] ?? json['salaryCurrency'],
-      salaryPeriod: json['salary_period'] ?? json['salaryPeriod'],
-      experienceRequired: json['experience_required'] ?? json['experienceRequired'],
-      requiredSkills: List<String>.from(json['required_skills'] ?? json['requiredSkills'] ?? []),
+      salaryCurrency: json['salary_currency'] ?? json['salaryCurrency'] ?? 'XOF',
+      salaryPeriod: json['salary_period'] ?? json['salaryPeriod'] ?? 'monthly',
+      experienceRequired: json['experience_required'] ?? json['experienceRequired'] ?? 0,
+      requiredSkills: List<String>.from(json['skills_required'] ?? json['required_skills'] ?? json['requiredSkills'] ?? []),
       preferredSkills: List<String>.from(json['preferred_skills'] ?? json['preferredSkills'] ?? []),
-      companyName: json['company_name'] ?? json['companyName'],
+      company: json['company_name'] ?? json['companyName'] ?? json['title'] ?? 'Entreprise',
+      companyName: json['company_name'] ?? json['companyName'] ?? json['title'] ?? 'Entreprise',
       companyLogo: json['company_logo'] ?? json['companyLogo'],
       companyDescription: json['company_description'] ?? json['companyDescription'],
-      startDate: DateTime.parse(json['start_date'] ?? json['startDate']),
+      startDate: json['start_date'] != null 
+          ? DateTime.parse(json['start_date'])
+          : (json['startDate'] != null 
+              ? DateTime.parse(json['startDate'])
+              : DateTime.now().add(Duration(days: 30))),
       endDate: json['end_date'] != null 
-          ? DateTime.parse(json['end_date'] ?? json['endDate'])
-          : null,
-      maxApplications: json['max_applications'] ?? json['maxApplications'],
+          ? DateTime.parse(json['end_date'])
+          : (json['endDate'] != null 
+              ? DateTime.parse(json['endDate'])
+              : json['expires_at'] != null 
+                ? DateTime.parse(json['expires_at'])
+                : null),
+      maxApplications: json['max_applications'] ?? json['maxApplications'] ?? json['positions_available'],
       currentApplications: json['current_applications'] ?? json['currentApplications'] ?? 0,
       isRemote: json['is_remote'] ?? json['isRemote'] ?? false,
       isUrgent: json['is_urgent'] ?? json['isUrgent'] ?? false,
       isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
       isFavorite: json['is_favorite'] ?? json['isFavorite'] ?? false,
+      hasApplied: json['has_applied'] ?? json['hasApplied'] ?? false,
+      appliedDate: json['applied_date'] != null 
+          ? DateTime.parse(json['applied_date'])
+          : (json['appliedDate'] != null 
+              ? DateTime.parse(json['appliedDate'])
+              : null),
       metadata: json['metadata'],
-      createdAt: DateTime.parse(json['created_at'] ?? json['createdAt']),
-      updatedAt: DateTime.parse(json['updated_at'] ?? json['updatedAt']),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'])
+          : (json['createdAt'] != null 
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now()),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at'])
+          : (json['updatedAt'] != null 
+              ? DateTime.parse(json['updatedAt'])
+              : DateTime.now()),
     );
+  }
+  
+  static String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date).inDays;
+      
+      if (difference == 0) {
+        return "Aujourd'hui";
+      } else if (difference == 1) {
+        return "Hier";
+      } else if (difference < 7) {
+        return "Il y a $difference jours";
+      } else if (difference < 30) {
+        final weeks = (difference / 7).floor();
+        return "Il y a $weeks semaine${weeks > 1 ? 's' : ''}";
+      } else {
+        final months = (difference / 30).floor();
+        return "Il y a $months mois";
+      }
+    } catch (e) {
+      return "Date inconnue";
+    }
   }
   
   Map<String, dynamic> toJson() {
@@ -245,6 +310,9 @@ class Job {
       'category': category,
       'contract_type': contractType,
       'status': status,
+      'salary': salary,
+      'posted_date': postedDate,
+      'requirements': requirements,
       'salary_min': salaryMin,
       'salary_max': salaryMax,
       'salary_currency': salaryCurrency,
@@ -263,6 +331,8 @@ class Job {
       'is_urgent': isUrgent,
       'is_featured': isFeatured,
       'is_favorite': isFavorite,
+      'has_applied': hasApplied,
+      'applied_date': appliedDate?.toIso8601String(),
       'metadata': metadata,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
@@ -277,6 +347,10 @@ class Job {
     String? category,
     String? contractType,
     String? status,
+    double? salary,
+    String? postedDate,
+    String? requirements,
+    String? company,
     double? salaryMin,
     double? salaryMax,
     String? salaryCurrency,
@@ -295,6 +369,8 @@ class Job {
     bool? isUrgent,
     bool? isFeatured,
     bool? isFavorite,
+    bool? hasApplied,
+    DateTime? appliedDate,
     Map<String, dynamic>? metadata,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -307,6 +383,10 @@ class Job {
       category: category ?? this.category,
       contractType: contractType ?? this.contractType,
       status: status ?? this.status,
+      company: company ?? this.company,
+      salary: salary ?? this.salary,
+      postedDate: postedDate ?? this.postedDate,
+      requirements: requirements ?? this.requirements,
       salaryMin: salaryMin ?? this.salaryMin,
       salaryMax: salaryMax ?? this.salaryMax,
       salaryCurrency: salaryCurrency ?? this.salaryCurrency,
@@ -325,6 +405,8 @@ class Job {
       isUrgent: isUrgent ?? this.isUrgent,
       isFeatured: isFeatured ?? this.isFeatured,
       isFavorite: isFavorite ?? this.isFavorite,
+      hasApplied: hasApplied ?? this.hasApplied,
+      appliedDate: appliedDate ?? this.appliedDate,
       metadata: metadata ?? this.metadata,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   
   # UI & Navigation
   cupertino_icons: ^1.0.2
@@ -19,42 +21,17 @@ dependencies:
   provider: ^6.1.1
   
   # HTTP & API
-  dio: ^5.4.0
-  dio_certificate_pinning: ^3.2.0
+  dio: ^5.3.2
   
-  # Local Storage
-  shared_preferences: ^2.2.2
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
-  
-  # Location & Permissions
-  geolocator: ^10.1.0
-  permission_handler: ^11.1.0
-  
-  # Notifications
-  firebase_core: ^2.24.2
-  firebase_messaging: ^14.7.10
-  
-  # Utils
-  intl: ^0.19.0
-  uuid: ^4.2.1
+  # Utils (essential only)
+  intl: any
+  uuid: ^3.0.7
   crypto: ^3.0.3
-  
-  # UI Components
-  flutter_svg: ^2.0.9
-  cached_network_image: ^3.3.0
-  shimmer: ^3.0.0
-  
-  # Forms & Validation
-  flutter_form_builder: ^9.1.1
-  form_builder_validators: ^9.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
-  hive_generator: ^2.0.1
-  build_runner: ^2.4.7
 
 flutter:
   uses-material-design: true
@@ -63,14 +40,3 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/logos/
-  
-  fonts:
-    - family: Inter
-      fonts:
-        - asset: assets/fonts/Inter-Regular.ttf
-        - asset: assets/fonts/Inter-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Inter-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Inter-Bold.ttf
-          weight: 700

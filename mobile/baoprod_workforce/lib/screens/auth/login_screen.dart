@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 60),
                 
                 // Logo et titre
-                _buildHeader(),
+                _buildHeader(context),
                 
                 const SizedBox(height: 48),
                 
@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
         // Logo
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor,
+            color: Theme.of(context).primaryColor,
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Icon(
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'BaoProd Workforce',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            color: AppTheme.primaryColor,
+            color: Theme.of(context).primaryColor,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'Connectez-vous à votre compte',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppTheme.textSecondaryColor,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
       ],
@@ -341,7 +341,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Text(
                   'Rejoignez BaoProd Workforce',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondaryColor,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -509,7 +509,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextSpan(
                   text: 'conditions d\'utilisation',
                   style: TextStyle(
-                    color: AppTheme.primaryColor,
+                    color: Theme.of(context).primaryColor,
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -517,7 +517,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextSpan(
                   text: 'politique de confidentialité',
                   style: TextStyle(
-                    color: AppTheme.primaryColor,
+                    color: Theme.of(context).primaryColor,
                     decoration: TextDecoration.underline,
                   ),
                 ),

@@ -1,5 +1,4 @@
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:permission_handler/permission_handler.dart'; // Temporarily removed
 import '../utils/constants.dart';
 
 class LocationService {
@@ -8,93 +7,64 @@ class LocationService {
   
   LocationService._();
   
-  Position? _currentPosition;
-  Position? get currentPosition => _currentPosition;
+  MockPosition? _currentPosition;
+  MockPosition? get currentPosition => _currentPosition;
   
-  /// Vérifie si les services de localisation sont activés
+  /// Vérifie si les services de localisation sont activés (stub)
   Future<bool> isLocationServiceEnabled() async {
-    return await Geolocator.isLocationServiceEnabled();
+    return true; // Simuler que les services sont activés
   }
   
-  /// Vérifie les permissions de localisation
-  Future<LocationPermission> checkLocationPermission() async {
-    return await Geolocator.checkPermission();
+  /// Vérifie les permissions de localisation (stub)
+  Future<MockLocationPermission> checkLocationPermission() async {
+    return MockLocationPermission.whileInUse;
   }
   
-  /// Demande les permissions de localisation
-  Future<LocationPermission> requestLocationPermission() async {
-    return await Geolocator.requestPermission();
+  /// Demande les permissions de localisation (stub)
+  Future<MockLocationPermission> requestLocationPermission() async {
+    return MockLocationPermission.whileInUse;
   }
   
   /// Vérifie et demande les permissions si nécessaire
   Future<bool> ensureLocationPermission() async {
-    // Vérifier si les services de localisation sont activés
-    bool serviceEnabled = await isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw LocationException('Les services de localisation sont désactivés');
-    }
-    
-    // Vérifier les permissions
-    LocationPermission permission = await checkLocationPermission();
-    
-    if (permission == LocationPermission.denied) {
-      permission = await requestLocationPermission();
-      if (permission == LocationPermission.denied) {
-        throw LocationException('Permission de localisation refusée');
-      }
-    }
-    
-    if (permission == LocationPermission.deniedForever) {
-      throw LocationException(
-        'Permission de localisation refusée définitivement. '
-        'Veuillez l\'activer dans les paramètres de l\'application.'
-      );
-    }
-    
+    // En mode démo, toujours réussir
     return true;
   }
   
-  /// Obtient la position actuelle
-  Future<Position> getCurrentPosition() async {
-    try {
-      // S'assurer que les permissions sont accordées
-      await ensureLocationPermission();
-      
-      // Obtenir la position actuelle
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: AppConstants.locationTimeout,
-      );
-      
-      _currentPosition = position;
-      return position;
-    } catch (e) {
-      throw LocationException('Impossible d\'obtenir la position: $e');
-    }
+  /// Obtient la position actuelle (position simulée de Libreville)
+  Future<MockPosition> getCurrentPosition() async {
+    await Future.delayed(Duration(seconds: 1)); // Simuler la latence GPS
+    
+    // Position simulée de Libreville, Gabon
+    _currentPosition = MockPosition(
+      latitude: 0.4162,
+      longitude: 9.4673,
+      accuracy: 10.0,
+      altitude: 35.0,
+      speed: 0.0,
+      heading: 0.0,
+      timestamp: DateTime.now(),
+    );
+    
+    return _currentPosition!;
   }
   
   /// Obtient la dernière position connue
-  Future<Position?> getLastKnownPosition() async {
-    try {
-      Position? position = await Geolocator.getLastKnownPosition();
-      if (position != null) {
-        _currentPosition = position;
-      }
-      return position;
-    } catch (e) {
-      print('Erreur lors de la récupération de la dernière position: $e');
-      return null;
-    }
+  Future<MockPosition?> getLastKnownPosition() async {
+    return _currentPosition;
   }
   
-  /// Calcule la distance entre deux positions
+  /// Calcule la distance entre deux positions (formule de Haversine simplifiée)
   double calculateDistance(
     double lat1, 
     double lon1, 
     double lat2, 
     double lon2
   ) {
-    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2);
+    // Formule simplifiée pour la démo
+    double deltaLat = (lat2 - lat1) * 111000; // Approximation en mètres
+    double deltaLon = (lon2 - lon1) * 111000;
+    return (deltaLat * deltaLat + deltaLon * deltaLon) / 1000; // Distance approximative
   }
   
   /// Vérifie si une position est dans un rayon donné
@@ -120,27 +90,19 @@ class LocationService {
     double latitude, 
     double longitude
   ) async {
-    try {
-      // Note: Pour une implémentation complète, vous devriez utiliser
-      // un service de géocodage inverse comme Google Maps Geocoding API
-      // ou OpenStreetMap Nominatim
-      
-      // Pour l'instant, retourner une adresse générique
-      return 'Lat: ${latitude.toStringAsFixed(6)}, Lng: ${longitude.toStringAsFixed(6)}';
-    } catch (e) {
-      print('Erreur lors de la récupération de l\'adresse: $e');
-      return null;
+    // Simuler une adresse pour Libreville
+    if (latitude == 0.4162 && longitude == 9.4673) {
+      return 'Libreville, Gabon';
     }
+    return 'Lat: ${latitude.toStringAsFixed(6)}, Lng: ${longitude.toStringAsFixed(6)}';
   }
   
   /// Valide la précision d'une position
-  bool isValidPosition(Position position) {
-    // Vérifier la précision (en mètres)
+  bool isValidPosition(MockPosition position) {
     if (position.accuracy > AppConstants.locationAccuracy) {
       return false;
     }
     
-    // Vérifier que les coordonnées sont valides
     if (position.latitude == 0.0 && position.longitude == 0.0) {
       return false;
     }
@@ -149,42 +111,38 @@ class LocationService {
   }
   
   /// Obtient une position pour le pointage avec validation
-  Future<Position> getPositionForClockIn() async {
-    try {
-      Position position = await getCurrentPosition();
-      
-      if (!isValidPosition(position)) {
-        throw LocationException(
-          'Position non valide. Précision: ${position.accuracy}m '
-          '(minimum requis: ${AppConstants.locationAccuracy}m)'
-        );
-      }
-      
-      return position;
-    } catch (e) {
-      throw LocationException('Impossible d\'obtenir une position valide pour le pointage: $e');
+  Future<MockPosition> getPositionForClockIn() async {
+    MockPosition position = await getCurrentPosition();
+    
+    if (!isValidPosition(position)) {
+      throw LocationException(
+        'Position non valide. Précision: ${position.accuracy}m '
+        '(minimum requis: ${AppConstants.locationAccuracy}m)'
+      );
     }
+    
+    return position;
   }
   
-  /// Ouvre les paramètres de localisation
+  /// Ouvre les paramètres de localisation (stub)
   Future<void> openLocationSettings() async {
-    await Geolocator.openLocationSettings();
+    print('📍 Ouverture des paramètres de localisation (simulé)');
   }
   
-  /// Ouvre les paramètres de l'application
+  /// Ouvre les paramètres de l'application (stub)
   Future<void> openAppSettings() async {
-    await openAppSettings();
+    print('⚙️ Ouverture des paramètres de l\'application (simulé)');
   }
   
   /// Formate une position pour l'affichage
-  String formatPosition(Position position) {
+  String formatPosition(MockPosition position) {
     return 'Lat: ${position.latitude.toStringAsFixed(6)}, '
            'Lng: ${position.longitude.toStringAsFixed(6)}, '
            'Précision: ${position.accuracy.toStringAsFixed(1)}m';
   }
   
   /// Formate une position pour l'API
-  Map<String, dynamic> positionToApiFormat(Position position) {
+  Map<String, dynamic> positionToApiFormat(MockPosition position) {
     return {
       'latitude': position.latitude,
       'longitude': position.longitude,
@@ -195,6 +153,35 @@ class LocationService {
       'timestamp': position.timestamp.toIso8601String(),
     };
   }
+}
+
+/// Position simulée pour remplacer la position Geolocator
+class MockPosition {
+  final double latitude;
+  final double longitude;
+  final double accuracy;
+  final double altitude;
+  final double speed;
+  final double heading;
+  final DateTime timestamp;
+  
+  MockPosition({
+    required this.latitude,
+    required this.longitude,
+    required this.accuracy,
+    required this.altitude,
+    required this.speed,
+    required this.heading,
+    required this.timestamp,
+  });
+}
+
+/// Permissions simulées pour remplacer LocationPermission
+enum MockLocationPermission {
+  denied,
+  deniedForever,
+  whileInUse,
+  always,
 }
 
 /// Exception personnalisée pour les erreurs de localisation
@@ -208,7 +195,7 @@ class LocationException implements Exception {
 
 /// Classe pour représenter une position avec des informations supplémentaires
 class LocationInfo {
-  final Position position;
+  final MockPosition position;
   final String? address;
   final bool isValid;
   final String? errorMessage;
@@ -220,7 +207,7 @@ class LocationInfo {
     this.errorMessage,
   });
   
-  factory LocationInfo.fromPosition(Position position, {String? address}) {
+  factory LocationInfo.fromPosition(MockPosition position, {String? address}) {
     bool isValid = LocationService.instance.isValidPosition(position);
     return LocationInfo(
       position: position,

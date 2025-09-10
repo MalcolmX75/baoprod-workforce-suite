@@ -5,5 +5,6 @@
     "Paie": true,
     "Absences": true,
     "Reporting": true,
-    "Messagerie": true
+    "Messagerie": true,
+    "Jobs": true
 }

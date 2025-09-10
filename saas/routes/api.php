@@ -117,7 +117,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'tenant'])->group(function () {
         Route::delete('/{id}', [TimesheetController::class, 'destroy']);
         
         // Action routes
-        Route::post('/{id}/validate', [TimesheetController::class, 'validate']);
+        Route::post('/{id}/validate', [TimesheetController::class, 'validateTimesheet']);
         Route::post('/{id}/reject', [TimesheetController::class, 'reject']);
         
         // Pointage routes

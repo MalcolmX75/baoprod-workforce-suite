@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
 import '../utils/constants.dart';
+import '../utils/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,13 +17,14 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _locationEnabled = true;
-  bool _darkModeEnabled = false;
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        title: Text(localizations?.get('settings') ?? 'Paramètres'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/dashboard'),
@@ -48,16 +52,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     });
                   },
                 ),
-                _buildSwitchTile(
-                  context,
-                  icon: Icons.dark_mode,
-                  title: 'Mode sombre',
-                  subtitle: 'Activer le thème sombre',
-                  value: _darkModeEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _darkModeEnabled = value;
-                    });
+                Consumer<ThemeProvider>(
+                  builder: (context, themeProvider, child) {
+                    return _buildSwitchTile(
+                      context,
+                      icon: Icons.dark_mode,
+                      title: 'Mode sombre',
+                      subtitle: 'Activer le thème sombre',
+                      value: themeProvider.isDarkMode,
+                      onChanged: (value) async {
+                        final newTheme = value ? ThemeMode.dark : ThemeMode.light;
+                        await themeProvider.setThemeMode(newTheme);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Paramètres de langue
+            _buildSection(
+              context,
+              title: localizations?.get('language') ?? 'Langue',
+              children: [
+                Consumer<LanguageProvider>(
+                  builder: (context, languageProvider, child) {
+                    return _buildActionTile(
+                      context,
+                      icon: Icons.language,
+                      title: localizations?.get('language') ?? 'Langue de l\'application',
+                      subtitle: languageProvider.currentLanguageName,
+                      onTap: () => _showLanguageDialog(context),
+                    );
                   },
                 ),
               ],
@@ -174,7 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     _showDeleteAccountDialog(context);
                   },
-                  textColor: AppTheme.errorColor,
+                  textColor: Theme.of(context).colorScheme.error, // Refactored
                 ),
               ],
             ),
@@ -196,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppTheme.primaryColor,
+            color: Theme.of(context).primaryColor, // Refactored
           ),
         ),
         const SizedBox(height: 12),
@@ -220,14 +248,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListTile(
       leading: Icon(
         icon,
-        color: AppTheme.primaryColor,
+        color: Theme.of(context).primaryColor, // Refactored
       ),
       title: Text(title),
       subtitle: Text(subtitle),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeColor: AppTheme.primaryColor,
+        activeColor: Theme.of(context).primaryColor, // Refactored
       ),
     );
   }
@@ -243,7 +271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListTile(
       leading: Icon(
         icon,
-        color: textColor ?? AppTheme.primaryColor,
+        color: textColor ?? Theme.of(context).primaryColor, // Refactored
       ),
       title: Text(
         title,
@@ -321,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         width: 64,
         height: 64,
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor,
+          color: Theme.of(context).primaryColor, // Refactored
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(
@@ -397,10 +425,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.of(context).pop();
               // TODO: Implémenter la suppression du compte
             },
-            child: const Text(
+            child: Text( // Changed to non-const
               'Supprimer',
-              style: TextStyle(color: AppTheme.errorColor),
+              style: TextStyle(color: Theme.of(context).colorScheme.error), // Refactored
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    final languageProvider = context.read<LanguageProvider>();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choisir la langue'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('Français'),
+              subtitle: const Text('French'),
+              value: 'fr',
+              groupValue: languageProvider.currentLanguageCode,
+              onChanged: (value) {
+                if (value != null) {
+                  languageProvider.changeLanguage(value);
+                  Navigator.of(context).pop();
+                }
+              },
+              contentPadding: EdgeInsets.zero,
+            ),
+            RadioListTile<String>(
+              title: const Text('English'),
+              subtitle: const Text('Anglais'),
+              value: 'en',
+              groupValue: languageProvider.currentLanguageCode,
+              onChanged: (value) {
+                if (value != null) {
+                  languageProvider.changeLanguage(value);
+                  Navigator.of(context).pop();
+                }
+              },
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Annuler'),
           ),
         ],
       ),

@@ -546,7 +546,7 @@ class ContratController extends Controller
         }
 
         try {
-            $tenantId = $request->get('tenant_id');
+            $tenantId = app('tenant')->id;
             $application = \BaoProd\Workforce\Models\Application::byTenant($tenantId)->findOrFail($request->application_id);
 
             $contrat = new Contrat();

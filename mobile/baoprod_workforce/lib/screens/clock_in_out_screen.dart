@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+// import 'package:geolocator/geolocator.dart'; // Removed due to v1 embedding issue
 import '../providers/timesheet_provider.dart';
 import '../services/location_service.dart';
 import '../utils/constants.dart';
+import '../utils/app_theme.dart';
 import '../widgets/custom_button.dart';
 
 class ClockInOutScreen extends StatefulWidget {
@@ -17,7 +19,7 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
   bool _isLoading = false;
   String? _error;
   String? _currentLocation;
-  Position? _currentPosition;
+  MockPosition? _currentPosition;
 
   @override
   void initState() {
@@ -192,7 +194,7 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
             Text(
               'Votre position sera enregistrée automatiquement',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -302,7 +304,7 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
                   children: [
                     Icon(
                       Icons.warning_outlined,
-                      color: AppTheme.warningColor,
+                      color: Theme.of(context).colorScheme.tertiary,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -310,7 +312,7 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
                       child: Text(
                         'Position non disponible',
                         style: TextStyle(
-                          color: AppTheme.warningColor,
+                          color: Theme.of(context).colorScheme.tertiary,
                           fontSize: 12,
                         ),
                       ),
@@ -369,14 +371,14 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
                   children: [
                     Icon(
                       Icons.info_outline,
-                      color: AppTheme.infoColor,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Vous avez déjà pointé aujourd\'hui',
                         style: TextStyle(
-                          color: AppTheme.infoColor,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                     ),
@@ -440,7 +442,7 @@ class _ClockInOutScreenState extends State<ClockInOutScreen> {
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondaryColor,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
             ),
           ),
         ),

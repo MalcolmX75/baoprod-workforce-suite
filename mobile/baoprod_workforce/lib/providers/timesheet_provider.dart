@@ -16,6 +16,53 @@ class TimesheetProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMoreData => _hasMoreData;
+  
+  /// Vérifie si l'utilisateur est actuellement pointé (au travail)
+  bool get isClockedIn {
+    if (_currentTimesheet == null) return false;
+    return _currentTimesheet!.heureFin == null && _currentTimesheet!.heureDebut != null;
+  }
+  
+  /// Obtient l'heure de début du pointage actuel
+  DateTime? get currentClockInTime {
+    if (_currentTimesheet == null) return null;
+    return _currentTimesheet!.heureDebut;
+  }
+  
+  /// Obtient le temps écoulé depuis le pointage d'entrée
+  Duration? get workTimeElapsed {
+    if (!isClockedIn || currentClockInTime == null) return null;
+    return DateTime.now().difference(currentClockInTime!);
+  }
+  
+  /// Obtient le temps de travail restant (basé sur 8h par défaut)
+  Duration getRemainingWorkTime({int targetHours = 8}) {
+    if (!isClockedIn) return Duration(hours: targetHours);
+    
+    final elapsed = workTimeElapsed ?? Duration.zero;
+    final target = Duration(hours: targetHours);
+    final remaining = target - elapsed;
+    
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+  
+  /// Obtient le statut de pointage formaté
+  String get clockingStatus {
+    if (!isClockedIn) return 'Non pointé';
+    return 'Au travail depuis ${_formatDuration(workTimeElapsed!)}';
+  }
+  
+  /// Formate une durée en texte lisible
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    
+    if (hours > 0) {
+      return '${hours}h${minutes.toString().padLeft(2, '0')}';
+    } else {
+      return '${minutes}min';
+    }
+  }
 
   /// Charge la liste des timesheets
   Future<void> loadTimesheets({bool refresh = false}) async {
@@ -30,6 +77,77 @@ class TimesheetProvider extends ChangeNotifier {
     _setLoading(true);
     _clearError();
 
+    // MODE DEMO - Données simulées de timesheets
+    await Future.delayed(Duration(milliseconds: 800));
+    
+    if (_currentPage == 1) {
+      final List<Map<String, dynamic>> demoTimesheets = [
+        {
+          'id': 1,
+          'user_id': 1,
+          'date_pointage': DateTime.now().toIso8601String(),
+          'heure_debut': DateTime.now().subtract(Duration(hours: 8)).toIso8601String(),
+          'heure_fin': DateTime.now().subtract(Duration(hours: 0, minutes: 30)).toIso8601String(),
+          'heures_travaillees_minutes': 450, // 7.5 hours in minutes
+          'latitude': 0.4162,
+          'longitude': 9.4673,
+          'status': 'submitted',
+          'commentaire': 'Journée productive',
+          'created_at': DateTime.now().subtract(Duration(hours: 8)).toIso8601String(),
+          'updated_at': DateTime.now().subtract(Duration(minutes: 30)).toIso8601String(),
+        },
+        {
+          'id': 2,
+          'user_id': 1,
+          'date_pointage': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+          'heure_debut': DateTime.now().subtract(Duration(days: 1, hours: 8)).toIso8601String(),
+          'heure_fin': DateTime.now().subtract(Duration(days: 1, hours: 0)).toIso8601String(),
+          'heures_travaillees_minutes': 480, // 8 hours in minutes
+          'latitude': 0.4162,
+          'longitude': 9.4673,
+          'status': 'approved',
+          'commentaire': null,
+          'created_at': DateTime.now().subtract(Duration(days: 1, hours: 8)).toIso8601String(),
+          'updated_at': DateTime.now().subtract(Duration(days: 1)).toIso8601String(),
+        },
+        {
+          'id': 3,
+          'user_id': 1,
+          'date_pointage': DateTime.now().subtract(Duration(days: 2)).toIso8601String(),
+          'heure_debut': DateTime.now().subtract(Duration(days: 2, hours: 8)).toIso8601String(),
+          'heure_fin': DateTime.now().subtract(Duration(days: 2, hours: 0)).toIso8601String(),
+          'heures_travaillees_minutes': 480, // 8 hours in minutes
+          'latitude': 0.4162,
+          'longitude': 9.4673,
+          'status': 'approved',
+          'commentaire': 'Formation équipe',
+          'created_at': DateTime.now().subtract(Duration(days: 2, hours: 8)).toIso8601String(),
+          'updated_at': DateTime.now().subtract(Duration(days: 2)).toIso8601String(),
+        },
+      ];
+
+      final List<Timesheet> newTimesheets = demoTimesheets
+          .map((timesheetData) => Timesheet.fromJson(timesheetData))
+          .toList();
+
+      if (refresh) {
+        _timesheets = newTimesheets;
+      } else {
+        _timesheets.addAll(newTimesheets);
+      }
+
+      _hasMoreData = false; // Pas plus de données pour la démo
+      _currentPage++;
+
+      // Mettre à jour le timesheet actuel
+      _updateCurrentTimesheet();
+
+      notifyListeners();
+    }
+    
+    _setLoading(false);
+
+    /* API CALL DISABLED FOR DEMO
     try {
       final response = await ApiService.getTimesheets(
         page: _currentPage,
@@ -66,6 +184,7 @@ class TimesheetProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
 
   /// Charge plus de timesheets (pagination)
@@ -84,6 +203,45 @@ class TimesheetProvider extends ChangeNotifier {
     _setLoading(true);
     _clearError();
 
+    // MODE DEMO - Simulation du pointage
+    await Future.delayed(Duration(seconds: 1));
+    
+    final now = DateTime.now();
+    final demoTimesheet = {
+      'id': DateTime.now().millisecondsSinceEpoch,
+      'user_id': 1,
+      'date_pointage': now.toIso8601String(),
+      'heure_debut': now.toIso8601String(),
+      'heure_fin': null,
+      'heures_travaillees_minutes': 0,
+      'latitude': latitude,
+      'longitude': longitude,
+      'status': 'draft',
+      'commentaire': comment,
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+    };
+    
+    _currentTimesheet = Timesheet.fromJson(demoTimesheet);
+    
+    // Ajouter à la liste
+    final existingIndex = _timesheets.indexWhere(
+      (t) => t.datePointage.day == _currentTimesheet!.datePointage.day &&
+             t.datePointage.month == _currentTimesheet!.datePointage.month &&
+             t.datePointage.year == _currentTimesheet!.datePointage.year,
+    );
+    
+    if (existingIndex == -1) {
+      _timesheets.insert(0, _currentTimesheet!);
+    } else {
+      _timesheets[existingIndex] = _currentTimesheet!;
+    }
+
+    notifyListeners();
+    _setLoading(false);
+    return true;
+    
+    /* API CALL DISABLED FOR DEMO
     try {
       final clockInData = {
         'latitude': latitude,
@@ -121,6 +279,7 @@ class TimesheetProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
 
   /// Pointage de sortie
@@ -137,6 +296,44 @@ class TimesheetProvider extends ChangeNotifier {
     _setLoading(true);
     _clearError();
 
+    // MODE DEMO - Simulation du pointage de sortie
+    await Future.delayed(Duration(seconds: 1));
+    
+    final now = DateTime.now();
+    final clockIn = _currentTimesheet!.heureDebut!;
+    final hoursWorked = now.difference(clockIn).inMinutes;
+    
+    final updatedTimesheet = {
+      'id': _currentTimesheet!.id,
+      'user_id': _currentTimesheet!.userId,
+      'date_pointage': _currentTimesheet!.datePointage.toIso8601String(),
+      'heure_debut': clockIn.toIso8601String(),
+      'heure_fin': now.toIso8601String(),
+      'heures_travaillees_minutes': hoursWorked,
+      'latitude': latitude,
+      'longitude': longitude,
+      'status': 'completed',
+      'commentaire': comment ?? _currentTimesheet!.commentaire,
+      'created_at': _currentTimesheet!.createdAt.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+    };
+    
+    _currentTimesheet = Timesheet.fromJson(updatedTimesheet);
+    
+    // Mettre à jour dans la liste
+    final index = _timesheets.indexWhere(
+      (t) => t.id == _currentTimesheet!.id,
+    );
+    
+    if (index != -1) {
+      _timesheets[index] = _currentTimesheet!;
+    }
+
+    notifyListeners();
+    _setLoading(false);
+    return true;
+    
+    /* API CALL DISABLED FOR DEMO
     try {
       final clockOutData = {
         'latitude': latitude,
@@ -178,6 +375,7 @@ class TimesheetProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+    */
   }
 
   /// Crée un nouveau timesheet
@@ -208,18 +406,19 @@ class TimesheetProvider extends ChangeNotifier {
   /// Met à jour le timesheet actuel
   void _updateCurrentTimesheet() {
     final today = DateTime.now();
-    final todayTimesheet = _timesheets.firstWhere(
-      (t) => t.datePointage.year == today.year &&
-             t.datePointage.month == today.month &&
-             t.datePointage.day == today.day,
-      orElse: () => null as Timesheet,
-    );
-
-    if (todayTimesheet != null) {
-      _currentTimesheet = todayTimesheet;
-    } else {
-      _currentTimesheet = null;
+    Timesheet? todayTimesheet;
+    
+    try {
+      todayTimesheet = _timesheets.firstWhere(
+        (t) => t.datePointage.year == today.year &&
+               t.datePointage.month == today.month &&
+               t.datePointage.day == today.day,
+      );
+    } catch (e) {
+      todayTimesheet = null;
     }
+
+    _currentTimesheet = todayTimesheet;
   }
 
   /// Obtient les timesheets d'une période

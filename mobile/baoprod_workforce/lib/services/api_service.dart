@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart'; // Temporarily removed
 import '../utils/constants.dart';
+import 'storage_service.dart';
 
 class ApiService {
   static late Dio _dio;
   static String? _authToken;
-  
+  static String? _tenantId;
+
   static Future<void> init() async {
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.baseUrl,
@@ -22,15 +24,22 @@ class ApiService {
     _dio.interceptors.add(_AuthInterceptor());
     _dio.interceptors.add(_LoggingInterceptor());
     
-    // Load saved token
+    // Load saved token and tenant
     await _loadToken();
+    await _loadTenant();
   }
   
   static Future<void> _loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString(AppConstants.tokenKey);
+    _authToken = StorageService.get<String>(AppConstants.tokenKey);
     if (_authToken != null) {
       _dio.options.headers['Authorization'] = 'Bearer $_authToken';
+    }
+  }
+
+  static Future<void> _loadTenant() async {
+    _tenantId = StorageService.get<String>('tenant_id');
+    if (_tenantId != null) {
+      _dio.options.headers['X-Tenant-ID'] = _tenantId;
     }
   }
   
@@ -38,19 +47,32 @@ class ApiService {
     _authToken = token;
     _dio.options.headers['Authorization'] = 'Bearer $token';
     
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.tokenKey, token);
+    await StorageService.save(AppConstants.tokenKey, token);
+  }
+
+  static Future<void> setTenant(String tenantId) async {
+    _tenantId = tenantId;
+    _dio.options.headers['X-Tenant-ID'] = tenantId;
+
+    await StorageService.save('tenant_id', tenantId);
   }
   
   static Future<void> clearAuthToken() async {
     _authToken = null;
     _dio.options.headers.remove('Authorization');
     
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.tokenKey);
+    await StorageService.remove(AppConstants.tokenKey);
+  }
+
+  static Future<void> clearTenant() async {
+    _tenantId = null;
+    _dio.options.headers.remove('X-Tenant-ID');
+
+    await StorageService.remove('tenant_id');
   }
   
   static String? get authToken => _authToken;
+  static String? get tenantId => _tenantId;
   
   // Auth endpoints
   static Future<Response> login(String email, String password) async {
@@ -156,6 +178,9 @@ class _AuthInterceptor extends Interceptor {
     if (ApiService._authToken != null) {
       options.headers['Authorization'] = 'Bearer ${ApiService._authToken}';
     }
+    if (ApiService._tenantId != null) {
+      options.headers['X-Tenant-ID'] = ApiService._tenantId;
+    }
     handler.next(options);
   }
   
@@ -164,6 +189,7 @@ class _AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       // Token expired or invalid
       await ApiService.clearAuthToken();
+      await ApiService.clearTenant();
       // You might want to navigate to login screen here
     }
     handler.next(err);

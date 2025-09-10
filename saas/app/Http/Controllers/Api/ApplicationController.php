@@ -51,7 +51,7 @@ class ApplicationController extends Controller
     /**
      * Get a specific application
      */
-    public function show(Application $application): JsonResponse
+    public function show(Request $request, Application $application): JsonResponse
     {
         $tenant = app('tenant');
         $user = $request->user();
@@ -243,7 +243,7 @@ class ApplicationController extends Controller
     /**
      * Delete an application
      */
-    public function destroy(Application $application): JsonResponse
+    public function destroy(Request $request, Application $application): JsonResponse
     {
         $tenant = app('tenant');
         $user = $request->user();

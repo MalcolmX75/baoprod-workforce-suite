@@ -5,7 +5,10 @@ class AppConstants {
   static const String appBuildNumber = '1';
   
   // API Configuration
-  static const String baseUrl = 'https://workforce.baoprod.com/api';
+  // For development, use localhost or your local IP address
+  // For Android emulator, use 10.0.2.2 to access host machine
+  static const String baseUrl = 'http://10.0.2.2:8080/api'; // Development URL
+  // static const String baseUrl = 'https://workforce.baoprod.com/api'; // Production URL
   static const String apiVersion = 'v1';
   static const Duration apiTimeout = Duration(seconds: 30);
   

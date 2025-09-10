@@ -1,69 +1,121 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'dart:convert';
 import '../utils/constants.dart';
 
+// In-memory storage stub for demo purposes
 class StorageService {
-  static late SharedPreferences _prefs;
-  static late Box _box;
+  static Map<String, String> _storage = {};
 
   static Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
-    _box = await Hive.openBox('baoprod_workforce');
+    print('📁 Storage service initialized (in-memory mode)');
   }
 
   // User data
   static Future<void> saveUser(Map<String, dynamic> userData) async {
-    await _box.put(AppConstants.userKey, userData);
+    _storage[AppConstants.userKey] = jsonEncode(userData);
+    print('👤 User data saved to storage');
   }
 
   static Map<String, dynamic>? getUser() {
-    return _box.get(AppConstants.userKey);
+    final userStr = _storage[AppConstants.userKey];
+    if (userStr != null) {
+      try {
+        return jsonDecode(userStr) as Map<String, dynamic>;
+      } catch (e) {
+        print('Error decoding user data: $e');
+        return null;
+      }
+    }
+    return null;
   }
 
   static Future<void> clearUser() async {
-    await _box.delete(AppConstants.userKey);
+    _storage.remove(AppConstants.userKey);
+    print('👤 User data cleared from storage');
   }
 
   // Timesheet data
   static Future<void> saveTimesheetData(Map<String, dynamic> data) async {
-    await _box.put(AppConstants.timesheetKey, data);
+    _storage[AppConstants.timesheetKey] = jsonEncode(data);
+    print('⏰ Timesheet data saved to storage');
   }
 
   static Map<String, dynamic>? getTimesheetData() {
-    return _box.get(AppConstants.timesheetKey);
+    final dataStr = _storage[AppConstants.timesheetKey];
+    if (dataStr != null) {
+      try {
+        return jsonDecode(dataStr) as Map<String, dynamic>;
+      } catch (e) {
+        print('Error decoding timesheet data: $e');
+        return null;
+      }
+    }
+    return null;
   }
 
   static Future<void> clearTimesheetData() async {
-    await _box.delete(AppConstants.timesheetKey);
+    _storage.remove(AppConstants.timesheetKey);
+    print('⏰ Timesheet data cleared from storage');
   }
 
   // Settings
   static Future<void> saveSettings(Map<String, dynamic> settings) async {
-    await _box.put(AppConstants.settingsKey, settings);
+    _storage[AppConstants.settingsKey] = jsonEncode(settings);
+    print('⚙️ Settings saved to storage');
   }
 
   static Map<String, dynamic>? getSettings() {
-    return _box.get(AppConstants.settingsKey);
+    final settingsStr = _storage[AppConstants.settingsKey];
+    if (settingsStr != null) {
+      try {
+        return jsonDecode(settingsStr) as Map<String, dynamic>;
+      } catch (e) {
+        print('Error decoding settings: $e');
+        return null;
+      }
+    }
+    return null;
   }
 
   static Future<void> clearSettings() async {
-    await _box.delete(AppConstants.settingsKey);
+    _storage.remove(AppConstants.settingsKey);
+    print('⚙️ Settings cleared from storage');
   }
 
   // Generic storage methods
   static Future<void> save(String key, dynamic value) async {
-    await _box.put(key, value);
+    if (value is String) {
+      _storage[key] = value;
+    } else {
+      // For complex objects, encode as JSON string
+      _storage[key] = jsonEncode(value);
+    }
+    print('💾 Saved $key to storage');
   }
 
   static T? get<T>(String key) {
-    return _box.get(key);
+    try {
+      final value = _storage[key];
+      if (value == null) return null;
+      
+      if (T == String) {
+        return value as T;
+      } else {
+        // Try to decode JSON string to object
+        return jsonDecode(value) as T;
+      }
+    } catch (e) {
+      print('Error getting value for key $key: $e');
+      return null;
+    }
   }
 
   static Future<void> remove(String key) async {
-    await _box.delete(key);
+    _storage.remove(key);
+    print('🗑️ Removed $key from storage');
   }
 
   static Future<void> clear() async {
-    await _box.clear();
+    _storage.clear();
+    print('🗑️ Cleared all storage');
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
+// import '../utils/app_theme.dart'; // Remove this import
 
 enum ButtonType {
   primary,
@@ -52,11 +53,20 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return SizedBox(
-      width: isFullWidth ? double.infinity : width,
-      height: height ?? _getButtonHeight(),
-      child: _buildButton(theme),
-    );
+    final buttonWidget = _buildButton(theme);
+    
+    if (isFullWidth && width == null) {
+      return SizedBox(
+        height: height ?? _getButtonHeight(),
+        child: buttonWidget,
+      );
+    } else {
+      return SizedBox(
+        width: width,
+        height: height ?? _getButtonHeight(),
+        child: buttonWidget,
+      );
+    }
   }
 
   Widget _buildButton(ThemeData theme) {
@@ -77,8 +87,8 @@ class CustomButton extends StatelessWidget {
   }
 
   Widget _buildElevatedButton(ThemeData theme, {bool isSecondary = false, bool isDanger = false, bool isSuccess = false}) {
-    Color bgColor = backgroundColor ?? _getBackgroundColor(isSecondary, isDanger, isSuccess);
-    Color fgColor = textColor ?? _getTextColor(isSecondary, isDanger, isSuccess);
+    Color bgColor = backgroundColor ?? _getBackgroundColor(theme, isSecondary, isDanger, isSuccess); // Pass theme
+    Color fgColor = textColor ?? _getTextColor(theme, isSecondary, isDanger, isSuccess); // Pass theme
 
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
@@ -97,7 +107,7 @@ class CustomButton extends StatelessWidget {
   }
 
   Widget _buildOutlinedButton(ThemeData theme) {
-    Color borderColor = backgroundColor ?? AppTheme.primaryColor;
+    Color borderColor = backgroundColor ?? theme.primaryColor; // Refactored
     Color fgColor = textColor ?? borderColor;
 
     return OutlinedButton(
@@ -116,7 +126,7 @@ class CustomButton extends StatelessWidget {
   }
 
   Widget _buildTextButton(ThemeData theme) {
-    Color fgColor = textColor ?? AppTheme.primaryColor;
+    Color fgColor = textColor ?? theme.primaryColor; // Refactored
 
     return TextButton(
       onPressed: isLoading ? null : onPressed,
@@ -208,21 +218,21 @@ class CustomButton extends StatelessWidget {
     }
   }
 
-  Color _getBackgroundColor(bool isSecondary, bool isDanger, bool isSuccess) {
-    if (isDanger) return AppTheme.errorColor;
-    if (isSuccess) return AppTheme.successColor;
-    if (isSecondary) return AppTheme.secondaryColor;
-    return AppTheme.primaryColor;
+  Color _getBackgroundColor(ThemeData theme, bool isSecondary, bool isDanger, bool isSuccess) {
+    if (isDanger) return theme.colorScheme.error; // Refactored
+    if (isSuccess) return theme.colorScheme.secondary; // Refactored
+    if (isSecondary) return theme.colorScheme.secondary; // Refactored
+    return theme.primaryColor; // Refactored
   }
 
-  Color _getTextColor(bool isSecondary, bool isDanger, bool isSuccess) {
+  Color _getTextColor(ThemeData theme, bool isSecondary, bool isDanger, bool isSuccess) {
     if (isDanger || isSuccess || !isSecondary) return Colors.white;
     return Colors.white;
   }
 }
 
 /// Bouton avec icône uniquement
-class IconButton extends StatelessWidget {
+class CustomIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final Color? color;
@@ -230,7 +240,7 @@ class IconButton extends StatelessWidget {
   final double size;
   final String? tooltip;
 
-  const IconButton({
+  const CustomIconButton({
     super.key,
     required this.icon,
     this.onPressed,
@@ -257,7 +267,7 @@ class IconButton extends StatelessWidget {
           child: Icon(
             icon,
             size: size,
-            color: color ?? AppTheme.primaryColor,
+            color: color ?? Theme.of(context).primaryColor, // Refactored
           ),
         ),
       ),
@@ -298,7 +308,7 @@ class CustomFloatingActionButton extends StatelessWidget {
     return FloatingActionButton(
       onPressed: onPressed,
       tooltip: tooltip,
-      backgroundColor: backgroundColor ?? AppTheme.primaryColor,
+      backgroundColor: backgroundColor ?? Theme.of(context).primaryColor, // Refactored
       foregroundColor: foregroundColor ?? Colors.white,
       child: Icon(icon, size: size * 0.6),
     );

@@ -71,13 +71,21 @@ class Timesheet {
       id: json['id'],
       userId: json['user_id'] ?? json['userId'],
       jobId: json['job_id'] ?? json['jobId'],
-      datePointage: DateTime.parse(json['date_pointage'] ?? json['datePointage']),
+      datePointage: json['date_pointage'] != null 
+          ? DateTime.parse(json['date_pointage'])
+          : (json['datePointage'] != null 
+              ? DateTime.parse(json['datePointage'])
+              : DateTime.now()),
       heureDebut: json['heure_debut'] != null 
-          ? DateTime.parse(json['heure_debut'] ?? json['heureDebut'])
-          : null,
+          ? DateTime.parse(json['heure_debut'])
+          : (json['heureDebut'] != null 
+              ? DateTime.parse(json['heureDebut'])
+              : null),
       heureFin: json['heure_fin'] != null 
-          ? DateTime.parse(json['heure_fin'] ?? json['heureFin'])
-          : null,
+          ? DateTime.parse(json['heure_fin'])
+          : (json['heureFin'] != null 
+              ? DateTime.parse(json['heureFin'])
+              : null),
       heuresTravailleesMinutes: json['heures_travaillees_minutes'] ?? json['heuresTravailleesMinutes'],
       heuresSupplementairesMinutes: json['heures_supplementaires_minutes'] ?? json['heuresSupplementairesMinutes'],
       heuresNuitMinutes: json['heures_nuit_minutes'] ?? json['heuresNuitMinutes'],
@@ -88,8 +96,16 @@ class Timesheet {
       commentaire: json['commentaire'],
       status: json['status'] ?? 'draft',
       configurationPays: json['configuration_pays'] ?? json['configurationPays'],
-      createdAt: DateTime.parse(json['created_at'] ?? json['createdAt']),
-      updatedAt: DateTime.parse(json['updated_at'] ?? json['updatedAt']),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'])
+          : (json['createdAt'] != null 
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now()),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.parse(json['updated_at'])
+          : (json['updatedAt'] != null 
+              ? DateTime.parse(json['updatedAt'])
+              : DateTime.now()),
     );
   }
   

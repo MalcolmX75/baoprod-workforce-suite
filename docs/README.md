@@ -42,6 +42,10 @@
 - [Tests et qualité](04-DEVELOPPEMENT/02-TESTS-QUALITE.md)
 - [Issues et bugs](04-DEVELOPPEMENT/03-ISSUES-BUGS.md)
 
+### 🐛 [Rapports de débogage](DEBUGGING-REPORTS/)
+**Rapports de sessions de débogage spécifiques**
+- [Débogage des Tests Laravel - 4 Sept. 2025](DEBUGGING-LARAVEL-TESTS-SEPT-2025.md)
+
 ### 💼 [05-COMMERCIAL](05-COMMERCIAL/)
 **Documents commerciaux**
 - [Devis et offres](05-COMMERCIAL/01-DEVIS-OFFRES.md)

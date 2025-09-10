@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
+// import '../utils/app_theme.dart'; // Remove this import
 import '../widgets/custom_button.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -70,7 +71,7 @@ class ProfileScreen extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: 50,
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: Theme.of(context).primaryColor, // Refactored
               child: user.avatar != null
                   ? ClipOval(
                       child: Image.network(
@@ -79,7 +80,7 @@ class ProfileScreen extends StatelessWidget {
                         height: 100,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Icon(
+                          return const Icon( // Changed to const
                             Icons.person,
                             size: 50,
                             color: Colors.white,
@@ -87,7 +88,7 @@ class ProfileScreen extends StatelessWidget {
                         },
                       ),
                     )
-                  : Icon(
+                  : const Icon( // Changed to const
                       Icons.person,
                       size: 50,
                       color: Colors.white,
@@ -110,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
             Text(
               user.email,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).textTheme.bodyMedium?.color, // Refactored
               ),
             ),
             
@@ -120,13 +121,13 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withOpacity(0.1), // Refactored
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
                 _getUserTypeText(user.type),
                 style: TextStyle(
-                  color: AppTheme.primaryColor,
+                  color: Theme.of(context).primaryColor, // Refactored
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -213,7 +214,7 @@ class ProfileScreen extends StatelessWidget {
       children: [
         Icon(
           icon,
-          color: AppTheme.textSecondaryColor,
+          color: Theme.of(context).textTheme.bodyMedium?.color, // Refactored
           size: 20,
         ),
         const SizedBox(width: 12),
@@ -224,7 +225,7 @@ class ProfileScreen extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondaryColor,
+                  color: Theme.of(context).textTheme.bodyMedium?.color, // Refactored
                 ),
               ),
               Text(
@@ -304,7 +305,7 @@ class ProfileScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: AppTheme.primaryColor,
+        color: Theme.of(context).primaryColor, // Refactored
       ),
       title: Text(title),
       subtitle: Text(subtitle),

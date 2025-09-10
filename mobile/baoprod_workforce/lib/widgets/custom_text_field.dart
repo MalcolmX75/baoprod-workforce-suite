@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utils/constants.dart';
+import '../utils/app_theme.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController? controller;
@@ -79,7 +80,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   void dispose() {
-    if (widget.focusNode == null) {
+    if (widget.focusNode == null) { // Added null check
       _focusNode.dispose();
     }
     super.dispose();
@@ -102,14 +103,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
           Text(
             widget.label!,
             style: theme.textTheme.labelLarge?.copyWith(
-              color: _isFocused ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
+              color: _isFocused ? theme.primaryColor : theme.textTheme.bodyLarge?.color, // Refactored
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
         ],
         
-        Container(
+        SizedBox( // Changed Container to SizedBox
           height: widget.height,
           child: TextFormField(
             controller: widget.controller,
@@ -137,7 +138,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               prefixIcon: widget.prefixIcon != null
                   ? Icon(
                       widget.prefixIcon,
-                      color: _isFocused ? AppTheme.primaryColor : AppTheme.textSecondaryColor,
+                      color: _isFocused ? theme.primaryColor : theme.textTheme.bodyMedium?.color, // Refactored
                     )
                   : null,
               suffixIcon: widget.suffixIcon,
@@ -148,36 +149,36 @@ class _CustomTextFieldState extends State<CustomTextField> {
                              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: theme.dividerColor), // Refactored
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: theme.dividerColor), // Refactored
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: BorderSide(color: theme.primaryColor, width: 2), // Refactored
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                borderSide: const BorderSide(color: AppTheme.errorColor),
+                borderSide: BorderSide(color: theme.colorScheme.error), // Refactored
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                borderSide: const BorderSide(color: AppTheme.errorColor, width: 2),
+                borderSide: BorderSide(color: theme.colorScheme.error, width: 2), // Refactored
               ),
               disabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                borderSide: const BorderSide(color: AppTheme.dividerColor),
+                borderSide: BorderSide(color: theme.dividerColor), // Refactored
               ),
               hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textHintColor,
+                color: theme.hintColor, // Refactored
               ),
               helperStyle: theme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondaryColor,
+                color: theme.textTheme.bodyMedium?.color, // Refactored
               ),
               errorStyle: theme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.errorColor,
+                color: theme.colorScheme.error, // Refactored
               ),
             ),
           ),
@@ -196,6 +197,7 @@ class SearchTextField extends StatefulWidget {
   final VoidCallback? onClear;
   final bool showClearButton;
   final bool autofocus;
+  final FocusNode? focusNode;
 
   const SearchTextField({
     super.key,
@@ -206,6 +208,7 @@ class SearchTextField extends StatefulWidget {
     this.onClear,
     this.showClearButton = true,
     this.autofocus = false,
+    this.focusNode,
   });
 
   @override
@@ -226,6 +229,8 @@ class _SearchTextFieldState extends State<SearchTextField> {
 
   @override
   void dispose() {
+    // We don't own the focus node if it's passed in, so we don't dispose it.
+    // The controller is always created by this state, so we dispose it.
     _controller.dispose();
     super.dispose();
   }
@@ -257,6 +262,7 @@ class _SearchTextFieldState extends State<SearchTextField> {
       textInputAction: TextInputAction.search,
       onSubmitted: widget.onSubmitted,
       autofocus: widget.autofocus,
+      focusNode: widget.focusNode,
     );
   }
 }

@@ -82,6 +82,16 @@ class Contrat extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function employer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'employer_id');
+    }
+
     public function job(): BelongsTo
     {
         return $this->belongsTo(Job::class);
