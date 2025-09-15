@@ -25,7 +25,7 @@ dependencies:
   
   # Utils (essential only)
   intl: any
-  uuid: ^3.0.7
+  uuid: ^4.5.1
   crypto: ^3.0.3
 
 dev_dependencies:
