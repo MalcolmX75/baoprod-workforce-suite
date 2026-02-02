@@ -21,7 +21,7 @@ dependencies:
   provider: ^6.1.1
   
   # HTTP & API
-  dio: ^5.3.2
+  dio: ^5.9.1
   
   # Utils (essential only)
   intl: any
